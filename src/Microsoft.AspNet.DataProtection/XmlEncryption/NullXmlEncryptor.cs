@@ -50,7 +50,7 @@ namespace Microsoft.AspNet.DataProtection.XmlEncryption
 
             if (_logger.IsWarningLevelEnabled())
             {
-                _logger.LogWarning("Encrypting using a null encryptor; secret information isn't being protected.");
+                _logger.LogWarning(DataProtectionEventId.NullXmlDecryptor, "Encrypting using a null encryptor; secret information isn't being protected.");
             }
 
             // <unencryptedKey>

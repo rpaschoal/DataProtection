@@ -113,7 +113,7 @@ namespace Microsoft.AspNet.DataProtection.AuthenticatedEncryption
 
             if (logger.IsVerboseLevelEnabled())
             {
-                logger.LogVerboseF($"Opening CNG algorithm '{HashAlgorithm}' from provider '{HashAlgorithmProvider}' with HMAC.");
+                logger.LogVerbose(DataProtectionEventId.CngCbcAuthenticatedEncryptionOptions, $"Opening CNG algorithm '{HashAlgorithm}' from provider '{HashAlgorithmProvider}' with HMAC.");
             }
 
             BCryptAlgorithmHandle algorithmHandle = null;
@@ -154,7 +154,7 @@ namespace Microsoft.AspNet.DataProtection.AuthenticatedEncryption
 
             if (logger.IsVerboseLevelEnabled())
             {
-                logger.LogVerboseF($"Opening CNG algorithm '{EncryptionAlgorithm}' from provider '{EncryptionAlgorithmProvider}' with chaining mode CBC.");
+                logger.LogVerbose(DataProtectionEventId.CngCbcAuthenticatedEncryptionOptions, $"Opening CNG algorithm '{EncryptionAlgorithm}' from provider '{EncryptionAlgorithmProvider}' with chaining mode CBC.");
             }
 
             BCryptAlgorithmHandle algorithmHandle = null;

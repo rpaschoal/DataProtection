@@ -88,7 +88,7 @@ namespace Microsoft.AspNet.DataProtection.AuthenticatedEncryption
 
             if (logger.IsVerboseLevelEnabled())
             {
-                logger.LogVerboseF($"Using managed keyed hash algorithm '{ValidationAlgorithmType.FullName}'.");
+                logger.LogVerbose(DataProtectionEventId.ManagedAuthenticatedEncryptionOptions, $"Using managed keyed hash algorithm '{ValidationAlgorithmType.FullName}'.");
             }
 
             if (ValidationAlgorithmType == typeof(HMACSHA256))
@@ -120,7 +120,7 @@ namespace Microsoft.AspNet.DataProtection.AuthenticatedEncryption
 
             if (logger.IsVerboseLevelEnabled())
             {
-                logger.LogVerboseF($"Using managed symmetric algorithm '{EncryptionAlgorithmType.FullName}'.");
+                logger.LogVerbose(DataProtectionEventId.ManagedAuthenticatedEncryptionOptions, $"Using managed symmetric algorithm '{EncryptionAlgorithmType.FullName}'.");
             }
 
             if (EncryptionAlgorithmType == typeof(Aes))

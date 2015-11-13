@@ -187,7 +187,7 @@ namespace Microsoft.AspNet.DataProtection.Repositories
         {
             if (_logger.IsVerboseLevelEnabled())
             {
-                _logger.LogVerboseF($"Reading data from file '{fullPath}'.");
+                _logger.LogVerbose(DataProtectionEventId.FileSystemXmlRepository, $"Reading data from file '{fullPath}'.");
             }
 
             using (var fileStream = File.OpenRead(fullPath))
@@ -208,7 +208,7 @@ namespace Microsoft.AspNet.DataProtection.Repositories
                 string newFriendlyName = Guid.NewGuid().ToString();
                 if (_logger.IsVerboseLevelEnabled())
                 {
-                    _logger.LogVerboseF($"The name '{friendlyName}' is not a safe file name, using '{newFriendlyName}' instead.");
+                    _logger.LogVerbose(DataProtectionEventId.FileSystemXmlRepository, $"The name '{friendlyName}' is not a safe file name, using '{newFriendlyName}' instead.");
                 }
                 friendlyName = newFriendlyName;
             }
@@ -237,7 +237,7 @@ namespace Microsoft.AspNet.DataProtection.Repositories
                 // Renames are atomic operations on the file systems we support.
                 if (_logger.IsInformationLevelEnabled())
                 {
-                    _logger.LogInformationF($"Writing data to file '{finalFilename}'.");
+                    _logger.LogInformation(DataProtectionEventId.FileSystemXmlRepository, "Writing data to file '{finalFilename}'.");
                 }
                 File.Move(tempFilename, finalFilename);
             }

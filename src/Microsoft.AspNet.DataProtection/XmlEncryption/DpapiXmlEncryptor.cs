@@ -65,11 +65,11 @@ namespace Microsoft.AspNet.DataProtection.XmlEncryption
             {
                 if (_protectToLocalMachine)
                 {
-                    _logger.LogVerbose("Encrypting to Windows DPAPI for local machine account.");
+                    _logger.LogVerbose(DataProtectionEventId.DpapiXmlEncryptor, "Encrypting to Windows DPAPI for local machine account.");
                 }
                 else
                 {
-                    _logger.LogVerboseF($"Encrypting to Windows DPAPI for current user account ({WindowsIdentity.GetCurrent().Name}).");
+                    _logger.LogVerbose(DataProtectionEventId.DpapiXmlEncryptor, $"Encrypting to Windows DPAPI for current user account ({WindowsIdentity.GetCurrent().Name}).");
                 }
             }
 
@@ -86,7 +86,7 @@ namespace Microsoft.AspNet.DataProtection.XmlEncryption
             {
                 if (_logger.IsErrorLevelEnabled())
                 {
-                    _logger.LogError(ex, "An error occurred while encrypting to Windows DPAPI.");
+                    _logger.LogError(DataProtectionEventId.DpapiXmlEncryptor, ex, "An error occurred while encrypting to Windows DPAPI.");
                 }
                 throw;
             }

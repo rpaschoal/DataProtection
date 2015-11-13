@@ -75,7 +75,7 @@ namespace Microsoft.AspNet.DataProtection.XmlEncryption
             string protectionDescriptorRuleString = _protectionDescriptorHandle.GetProtectionDescriptorRuleString();
             if (_logger.IsVerboseLevelEnabled())
             {
-                _logger.LogVerboseF($"Encrypting to Windows DPAPI-NG using protection descriptor rule '{protectionDescriptorRuleString}'.");
+                _logger.LogVerbose(DataProtectionEventId.DpapiNGXmlEncryptor, $"Encrypting to Windows DPAPI-NG using protection descriptor rule '{protectionDescriptorRuleString}'.");
             }
 
             // Convert the XML element to a binary secret so that it can be run through DPAPI
@@ -91,7 +91,7 @@ namespace Microsoft.AspNet.DataProtection.XmlEncryption
             {
                 if (_logger.IsErrorLevelEnabled())
                 {
-                    _logger.LogError(ex, "An error occurred while encrypting to Windows DPAPI-NG.");
+                    _logger.LogError(DataProtectionEventId.DpapiNGXmlEncryptor, ex, "An error occurred while encrypting to Windows DPAPI-NG.");
                 }
                 throw;
             }

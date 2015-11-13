@@ -3,6 +3,7 @@
 
 using System;
 using System.Runtime.CompilerServices;
+using Microsoft.AspNet.DataProtection;
 using Microsoft.Extensions.Logging.Internal;
 
 namespace Microsoft.Extensions.Logging
@@ -69,44 +70,72 @@ namespace Microsoft.Extensions.Logging
             return (logger != null && logger.IsEnabled(level));
         }
 
-        public static void LogDebugF(this ILogger logger, FormattableString message)
+        public static void LogDebug(this ILogger logger, DataProtectionEventId eventId, FormattableString message)
         {
-            logger.LogDebug(message.Format, message.GetArguments());
+            logger.LogDebug((int)eventId, message.Format, message.GetArguments());
         }
 
-        public static void LogDebugF(this ILogger logger, Exception error, FormattableString message)
+        public static void LogDebug(this ILogger logger, DataProtectionEventId eventId, string message)
         {
-            logger.LogDebug(new FormattedLogValues(message.Format, message.GetArguments()), error);
+            logger.LogDebug((int)eventId, message);
         }
 
-        public static void LogError(this ILogger logger, Exception error, string message)
+        public static void LogDebug(this ILogger logger, DataProtectionEventId eventId, Exception error, FormattableString message)
         {
-            logger.LogError(message, error);
+            logger.LogDebug((int)eventId, new FormattedLogValues(message.Format, message.GetArguments()), error);
         }
 
-        public static void LogErrorF(this ILogger logger, Exception error, FormattableString message)
+        public static void LogError(this ILogger logger, DataProtectionEventId eventId, string message)
         {
-            logger.LogError(new FormattedLogValues(message.Format, message.GetArguments()), error);
+            logger.LogError((int)eventId, message);
         }
 
-        public static void LogInformationF(this ILogger logger, FormattableString message)
+        public static void LogError(this ILogger logger, DataProtectionEventId eventId, Exception error, string message)
         {
-            logger.LogInformation(message.Format, message.GetArguments());
+            logger.LogError((int)eventId, message, error);
         }
 
-        public static void LogVerboseF(this ILogger logger, FormattableString message)
+        public static void LogError(this ILogger logger, DataProtectionEventId eventId, Exception error, FormattableString message)
         {
-            logger.LogVerbose(message.Format, message.GetArguments());
+            logger.LogError((int)eventId, new FormattedLogValues(message.Format, message.GetArguments()), error);
         }
 
-        public static void LogWarningF(this ILogger logger, FormattableString message)
+        public static void LogInformation(this ILogger logger, DataProtectionEventId eventId, FormattableString message)
         {
-            logger.LogWarning(message.Format, message.GetArguments());
+            logger.LogInformation((int)eventId, message.Format, message.GetArguments());
         }
 
-        public static void LogWarningF(this ILogger logger, Exception error, FormattableString message)
+        public static void LogInformation(this ILogger logger, DataProtectionEventId eventId, string message)
         {
-            logger.LogWarning(new FormattedLogValues(message.Format, message.GetArguments()), error);
+            logger.LogInformation((int)eventId, message);
+        }
+
+        public static void LogVerbose(this ILogger logger, DataProtectionEventId eventId, FormattableString message)
+        {
+            logger.LogVerbose((int)eventId, message.Format, message.GetArguments());
+        }
+        public static void LogVerbose(this ILogger logger, DataProtectionEventId eventId, string message)
+        {
+            logger.LogVerbose((int)eventId, message);
+        }
+
+        public static void LogWarning(this ILogger logger, DataProtectionEventId eventId, FormattableString message)
+        {
+            logger.LogWarning((int)eventId, message.Format, message.GetArguments());
+        }
+        public static void LogWarning(this ILogger logger, DataProtectionEventId eventId, string message)
+        {
+            logger.LogWarning((int)eventId, message);
+        }
+
+        public static void LogWarning(this ILogger logger, DataProtectionEventId eventId, Exception error, FormattableString message)
+        {
+            logger.LogWarning((int)eventId, new FormattedLogValues(message.Format, message.GetArguments()), error);
+        }
+
+        public static void LogWarning(this ILogger logger, DataProtectionEventId eventId, Exception error, string message)
+        {
+            logger.LogWarning((int)eventId, message, error);
         }
     }
 }

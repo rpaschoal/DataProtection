@@ -142,7 +142,7 @@ namespace Microsoft.AspNet.DataProtection.Repositories
         {
             if (_logger.IsVerboseLevelEnabled())
             {
-                _logger.LogVerboseF($"Reading data from registry key '{regKey}', value '{valueName}'.");
+                _logger.LogVerbose(DataProtectionEventId.RegistryXmlRepository, $"Reading data from registry key '{regKey}', value '{valueName}'.");
             }
 
             string data = regKey.GetValue(valueName) as string;
@@ -161,7 +161,7 @@ namespace Microsoft.AspNet.DataProtection.Repositories
                 string newFriendlyName = Guid.NewGuid().ToString();
                 if (_logger.IsVerboseLevelEnabled())
                 {
-                    _logger.LogVerboseF($"The name '{friendlyName}' is not a safe registry value name, using '{newFriendlyName}' instead.");
+                    _logger.LogVerbose(DataProtectionEventId.RegistryXmlRepository, $"The name '{friendlyName}' is not a safe registry value name, using '{newFriendlyName}' instead.");
                 }
                 friendlyName = newFriendlyName;
             }

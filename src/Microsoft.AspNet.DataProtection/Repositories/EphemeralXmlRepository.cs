@@ -22,7 +22,7 @@ namespace Microsoft.AspNet.DataProtection.Repositories
             var logger = services?.GetLogger<EphemeralXmlRepository>();
             if (logger.IsWarningLevelEnabled())
             {
-                logger.LogWarning("Using an in-memory repository. Keys will not be persisted to storage.");
+                logger.LogWarning(DataProtectionEventId.EphemeralXmlRepository, "Using an in-memory repository. Keys will not be persisted to storage.");
             }
         }
 

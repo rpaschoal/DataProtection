@@ -44,7 +44,7 @@ namespace Microsoft.Extensions.DependencyInjection
                 {
                     if (log.IsInformationLevelEnabled())
                     {
-                        log.LogInformationF($"Azure Web Sites environment detected. Using '{azureWebSitesKeysFolder.FullName}' as key repository; keys will not be encrypted at rest.");
+                        log.LogInformation(DataProtectionEventId.KeyServices, $"Azure Web Sites environment detected. Using '{azureWebSitesKeysFolder.FullName}' as key repository; keys will not be encrypted at rest.");
                     }
 
                     // Cloud DPAPI isn't yet available, so we don't encrypt keys at rest.
@@ -69,11 +69,11 @@ namespace Microsoft.Extensions.DependencyInjection
                         {
                             if (keyEncryptorDescriptor != null)
                             {
-                                log.LogInformationF($"User profile is available. Using '{localAppDataKeysFolder.FullName}' as key repository and Windows DPAPI to encrypt keys at rest.");
+                                log.LogInformation(DataProtectionEventId.KeyServices, $"User profile is available. Using '{localAppDataKeysFolder.FullName}' as key repository and Windows DPAPI to encrypt keys at rest.");
                             }
                             else
                             {
-                                log.LogInformationF($"User profile is available. Using '{localAppDataKeysFolder.FullName}' as key repository; keys will not be encrypted at rest.");
+                                log.LogInformation(DataProtectionEventId.KeyServices, $"User profile is available. Using '{localAppDataKeysFolder.FullName}' as key repository; keys will not be encrypted at rest.");
                             }
                         }
                     }
@@ -93,7 +93,7 @@ namespace Microsoft.Extensions.DependencyInjection
 
                             if (log.IsInformationLevelEnabled())
                             {
-                                log.LogInformationF($"User profile not available. Using '{regKeyStorageKey.Name}' as key repository and Windows DPAPI to encrypt keys at rest.");
+                                log.LogInformation(DataProtectionEventId.KeyServices, $"User profile not available. Using '{regKeyStorageKey.Name}' as key repository and Windows DPAPI to encrypt keys at rest.");
                             }
                         }
                         else
@@ -104,7 +104,7 @@ namespace Microsoft.Extensions.DependencyInjection
 
                             if (log.IsWarningLevelEnabled())
                             {
-                                log.LogWarning("Neither user profile nor HKLM registry available. Using an ephemeral key repository. Protected data will be unavailable when application exits.");
+                                log.LogWarning(DataProtectionEventId.KeyServices, $"Neither user profile nor HKLM registry available. Using an ephemeral key repository. Protected data will be unavailable when application exits.");
                             }
                         }
                     }

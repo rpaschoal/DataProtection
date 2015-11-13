@@ -151,7 +151,7 @@ namespace Microsoft.AspNet.DataProtection.XmlEncryption
                 {
                     if (_logger.IsErrorLevelEnabled())
                     {
-                        _logger.LogErrorF(ex, $"An exception occurred while trying to resolve certificate with thumbprint '{thumbprint}'.");
+                        _logger.LogError(DataProtectionEventId.CertificateXmlEncryptor, ex, $"An exception occurred while trying to resolve certificate with thumbprint '{thumbprint}'.");
                     }
                     throw;
                 }
@@ -165,7 +165,7 @@ namespace Microsoft.AspNet.DataProtection.XmlEncryption
 
             if (_logger.IsVerboseLevelEnabled())
             {
-                _logger.LogVerboseF($"Encrypting to X.509 certificate with thumbprint '{cert.Thumbprint}'.");
+                _logger.LogVerbose(DataProtectionEventId.CertificateXmlEncryptor, $"Encrypting to X.509 certificate with thumbprint '{cert.Thumbprint}'.");
             }
 
             try
@@ -176,7 +176,7 @@ namespace Microsoft.AspNet.DataProtection.XmlEncryption
             {
                 if (_logger.IsErrorLevelEnabled())
                 {
-                    _logger.LogErrorF(ex, $"An error occurred while encrypting to X.509 certificate with thumbprint '{cert.Thumbprint}'.");
+                    _logger.LogError(DataProtectionEventId.CertificateXmlEncryptor, ex, $"An error occurred while encrypting to X.509 certificate with thumbprint '{cert.Thumbprint}'.");
                 }
                 throw;
             }

@@ -50,7 +50,7 @@ namespace Microsoft.AspNet.DataProtection.XmlEncryption
 
             if (_logger.IsVerboseLevelEnabled())
             {
-                _logger.LogVerbose("Decrypting secret element using Windows DPAPI.");
+                _logger.LogVerbose(DataProtectionEventId.DpapiXmlDecryptor, "Decrypting secret element using Windows DPAPI.");
             }
 
             try
@@ -72,7 +72,7 @@ namespace Microsoft.AspNet.DataProtection.XmlEncryption
                 // sensitive information.
                 if (_logger.IsErrorLevelEnabled())
                 {
-                    _logger.LogError(ex, "An exception occurred while trying to decrypt the element.");
+                    _logger.LogError(DataProtectionEventId.DpapiXmlDecryptor, ex, "An exception occurred while trying to decrypt the element.");
                 }
                 throw;
             }
