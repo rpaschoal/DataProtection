@@ -3,7 +3,9 @@
 
 using System;
 using System.Runtime.CompilerServices;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Internal;
+using Microsoft.AspNet.DataProtection.KeyManagement;
 
 namespace Microsoft.Extensions.Logging
 {
@@ -13,11 +15,122 @@ namespace Microsoft.Extensions.Logging
     /// </summary>
     internal static class LoggingExtensions
     {
+
+        private static Action<ILogger, string, string, Exception> _oppeningCngAlgoritmHmac;
+        private static Action<ILogger, string, string, Exception> _oppeningCngAlgoritmCbc;
+        private static Action<ILogger, string, string, Exception> _oppeningCngAlgoritmCgm;
+        private static Action<ILogger, string, Exception> _usingManagedKeyedHashAlgoritm;
+        private static Action<ILogger, string, Exception> _usingManagedSymmetricAlgoritm;
+        private static Action<ILogger, Guid, Exception> _keyCreateEncryptorInstanceFailed;
+        private static Action<ILogger, Guid, DateTimeOffset, Exception> _consideringDefaultKey;
+        private static Action<ILogger, Guid, Exception> _notConsideringDefaultKey;
+
+        static LoggingExtensions()
+        {
+            _oppeningCngAlgoritmHmac = LoggerMessage.Define<string, string>(
+                logLevel: LogLevel.Verbose,
+                eventId: 1,
+                formatString: "Opening CNG algorithm '{HashAlgorithm}' from provider '{HashAlgorithmProvider}' with HMAC.");
+
+
+            _oppeningCngAlgoritmCbc = LoggerMessage.Define<string, string>(
+                            logLevel: LogLevel.Verbose,
+                            eventId: 1,
+                            formatString: "Opening CNG algorithm '{EncryptionAlgorithm}' from provider '{EncryptionAlgorithmProvider}' with chaining mode CBC.");
+
+
+            _oppeningCngAlgoritmCgm = LoggerMessage.Define<string, string>(
+                            logLevel: LogLevel.Verbose,
+                            eventId: 1,
+                            formatString: "Opening CNG algorithm '{EncryptionAlgorithm}' from provider '{EncryptionAlgorithmProvider}' with chaining mode GCM.");
+
+            _usingManagedKeyedHashAlgoritm = LoggerMessage.Define<string>(
+                            logLevel: LogLevel.Verbose,
+                            eventId: 1,
+                            formatString: "Using managed keyed hash algorithm '{ValidationAlgorithmType}'.");
+
+            _usingManagedSymmetricAlgoritm = LoggerMessage.Define<string>(
+                             logLevel: LogLevel.Verbose,
+                             eventId: 1,
+                             formatString: "Using managed symmetric algorithm '{EncryptionAlgorithmType}'.");
+
+            _keyCreateEncryptorInstanceFailed = LoggerMessage.Define<Guid>(
+                             logLevel: LogLevel.Warning,
+                             eventId: 1,
+                             formatString: $"Key {{KeyId:B}} is ineligible to be the default key because its {nameof(IKey.CreateEncryptorInstance)} method failed.");
+
+            _consideringDefaultKey = LoggerMessage.Define<Guid, DateTimeOffset>(
+                             logLevel: LogLevel.Verbose,
+                             eventId: 1,
+                             formatString: "Considering key {KeyId:B} with expiration date {ExpirationDate:u} as default key..");
+
+            _notConsideringDefaultKey = LoggerMessage.Define<Guid>(
+                                        logLevel: LogLevel.Verbose,
+                                        eventId: 1,
+                                        formatString: "Key {KeyId:B} is no longer under consideration as default key because it is expired, revoked, or cannot be deciphered.");
+
+
+            
+        }
+
+        public static void OpeningCngAlgoritmHmac(this ILogger logger, string hashAlgorithm, string hashAlgorithmProvider)
+        {
+            _oppeningCngAlgoritmHmac(logger, hashAlgorithm, hashAlgorithmProvider, null);
+        }
+
+        public static void OpeningCngAlgoritmCbc(this ILogger logger, string hashAlgorithm, string hashAlgorithmProvider)
+        {
+            _oppeningCngAlgoritmCbc(logger, hashAlgorithm, hashAlgorithmProvider, null);
+        }
+
+        public static void OpeningCngAlgoritmCgm(this ILogger logger, string hashAlgorithm, string hashAlgorithmProvider)
+        {
+            _oppeningCngAlgoritmCgm(logger, hashAlgorithm, hashAlgorithmProvider, null);
+        }
+
+        public static void UsingManagedKeyedHashAlgoritm(this ILogger logger, string validationAlgorithmType)
+        {
+            _usingManagedKeyedHashAlgoritm(logger, validationAlgorithmType, null);
+        }
+        public static void UsingManagedSymmetricAlgoritm(this ILogger logger, string encryptionAlgorithmType)
+        {
+            _usingManagedSymmetricAlgoritm(logger, encryptionAlgorithmType, null);
+        }
+        public static void KeyCreateEncryptorInstanceFailed(this ILogger logger, Guid keyId)
+        {
+            _keyCreateEncryptorInstanceFailed(logger, keyId, null);
+        }
+
+        public static void ConsideringDefaultKey(this ILogger logger, Guid keyId, DateTimeOffset expirationDate)
+        {
+            _consideringDefaultKey(logger, keyId, expirationDate, null);
+        }
+        public static void NotConsideringDefaultKey(this ILogger logger, Guid keyId)
+        {
+            _notConsideringDefaultKey(logger, keyId, null);
+        }
+
+        public static void DefaultKeyImminentAndRepositoryContainsNotSuccessor(this ILogger logger)
+        {
+            if (logger.IsVerboseLevelEnabled())
+            {
+                logger.LogVerbose("Default key expiration imminent and repository contains no viable successor. Caller should generate a successor.");
+            }
+        }
+
+        public static void RepositoryContainsNoViableDefaultKey(this ILogger logger)
+        {
+            if (logger.IsVerboseLevelEnabled())
+            {
+                logger.LogVerbose("Repository contains no viable default key. Caller should generate a key with immediate activation.");
+            }
+        }
         /// <summary>
         /// Returns a value stating whether the 'debug' log level is enabled.
         /// Returns false if the logger instance is null.
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+
         public static bool IsDebugLevelEnabled(this ILogger logger)
         {
             return IsLogLevelEnabledCore(logger, LogLevel.Debug);
