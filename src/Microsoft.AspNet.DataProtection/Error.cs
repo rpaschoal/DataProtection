@@ -85,7 +85,7 @@ namespace Microsoft.AspNet.DataProtection
         {
             return new CryptographicException(Resources.ProtectionProvider_BadVersion);
         }
-        
+
         public static InvalidOperationException XmlKeyManager_DuplicateKey(Guid keyId)
         {
             string message = String.Format(CultureInfo.CurrentCulture, Resources.XmlKeyManager_DuplicateKey, keyId);

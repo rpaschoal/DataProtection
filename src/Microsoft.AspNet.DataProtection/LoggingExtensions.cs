@@ -24,6 +24,11 @@ namespace Microsoft.Extensions.Logging
         private static Action<ILogger, Guid, Exception> _keyCreateEncryptorInstanceFailed;
         private static Action<ILogger, Guid, DateTimeOffset, Exception> _consideringDefaultKey;
         private static Action<ILogger, Guid, Exception> _notConsideringDefaultKey;
+        private static Action<ILogger, Guid, string, Exception> _performingProtect;
+        private static Action<ILogger, Guid, string, Exception> _performingUnprotect;
+        private static Action<ILogger, Guid, Exception> _keyNotFoundInKeyRing;
+        private static Action<ILogger, Guid, Exception> _keyRevokedProceeding;
+        private static Action<ILogger, Guid, Exception> _keyRevokedNotProceeding;
 
         static LoggingExtensions()
         {
@@ -34,43 +39,66 @@ namespace Microsoft.Extensions.Logging
 
 
             _oppeningCngAlgoritmCbc = LoggerMessage.Define<string, string>(
-                            logLevel: LogLevel.Verbose,
-                            eventId: 1,
-                            formatString: "Opening CNG algorithm '{EncryptionAlgorithm}' from provider '{EncryptionAlgorithmProvider}' with chaining mode CBC.");
+                logLevel: LogLevel.Verbose,
+                eventId: 1,
+                formatString: "Opening CNG algorithm '{EncryptionAlgorithm}' from provider '{EncryptionAlgorithmProvider}' with chaining mode CBC.");
 
 
             _oppeningCngAlgoritmCgm = LoggerMessage.Define<string, string>(
-                            logLevel: LogLevel.Verbose,
-                            eventId: 1,
-                            formatString: "Opening CNG algorithm '{EncryptionAlgorithm}' from provider '{EncryptionAlgorithmProvider}' with chaining mode GCM.");
+                logLevel: LogLevel.Verbose,
+                eventId: 1,
+                formatString: "Opening CNG algorithm '{EncryptionAlgorithm}' from provider '{EncryptionAlgorithmProvider}' with chaining mode GCM.");
 
             _usingManagedKeyedHashAlgoritm = LoggerMessage.Define<string>(
-                            logLevel: LogLevel.Verbose,
-                            eventId: 1,
-                            formatString: "Using managed keyed hash algorithm '{ValidationAlgorithmType}'.");
+                logLevel: LogLevel.Verbose,
+                eventId: 1,
+                formatString: "Using managed keyed hash algorithm '{ValidationAlgorithmType}'.");
 
             _usingManagedSymmetricAlgoritm = LoggerMessage.Define<string>(
-                             logLevel: LogLevel.Verbose,
-                             eventId: 1,
-                             formatString: "Using managed symmetric algorithm '{EncryptionAlgorithmType}'.");
+                logLevel: LogLevel.Verbose,
+                eventId: 1,
+                formatString: "Using managed symmetric algorithm '{EncryptionAlgorithmType}'.");
 
             _keyCreateEncryptorInstanceFailed = LoggerMessage.Define<Guid>(
-                             logLevel: LogLevel.Warning,
-                             eventId: 1,
-                             formatString: $"Key {{KeyId:B}} is ineligible to be the default key because its {nameof(IKey.CreateEncryptorInstance)} method failed.");
+                logLevel: LogLevel.Warning,
+                eventId: 1,
+                formatString: $"Key {{KeyId:B}} is ineligible to be the default key because its {nameof(IKey.CreateEncryptorInstance)} method failed.");
 
             _consideringDefaultKey = LoggerMessage.Define<Guid, DateTimeOffset>(
-                             logLevel: LogLevel.Verbose,
-                             eventId: 1,
-                             formatString: "Considering key {KeyId:B} with expiration date {ExpirationDate:u} as default key..");
+                logLevel: LogLevel.Verbose,
+                eventId: 1,
+                formatString: "Considering key {KeyId:B} with expiration date {ExpirationDate:u} as default key..");
 
             _notConsideringDefaultKey = LoggerMessage.Define<Guid>(
-                                        logLevel: LogLevel.Verbose,
-                                        eventId: 1,
-                                        formatString: "Key {KeyId:B} is no longer under consideration as default key because it is expired, revoked, or cannot be deciphered.");
+                logLevel: LogLevel.Verbose,
+                eventId: 1,
+                formatString: "Key {KeyId:B} is no longer under consideration as default key because it is expired, revoked, or cannot be deciphered.");
 
+            _performingProtect = LoggerMessage.Define<Guid, string>(
+                logLevel: LogLevel.Debug,
+                eventId: 1,
+                formatString: "Performing protect operation to key {KeyId:B} with purposes {Purposes}.");
 
-            
+            _performingUnprotect = LoggerMessage.Define<Guid, string>(
+                  logLevel: LogLevel.Debug,
+                  eventId: 1,
+                  formatString: "Performing unprotect operation to key {KeyId:B} with purposes {Purposes}.");
+
+            _keyNotFoundInKeyRing = LoggerMessage.Define<Guid>(
+                 logLevel: LogLevel.Debug,
+                 eventId: 1,
+                 formatString: "Key {KeyId:B} was not found in the key ring. Unprotect operation cannot proceed.");
+
+            _keyRevokedProceeding = LoggerMessage.Define<Guid>(
+                logLevel: LogLevel.Verbose,
+                eventId: 1,
+                formatString: "Key {KeyId:B} was revoked. Caller requested unprotect operation proceed regardless.");
+
+            _keyRevokedNotProceeding = LoggerMessage.Define<Guid>(
+                 logLevel: LogLevel.Verbose,
+                 eventId: 1,
+                 formatString: "Key {KeyId:B} was revoked. Unprotect operation cannot proceed.");
+
         }
 
         public static void OpeningCngAlgoritmHmac(this ILogger logger, string hashAlgorithm, string hashAlgorithmProvider)
@@ -105,10 +133,57 @@ namespace Microsoft.Extensions.Logging
         {
             _consideringDefaultKey(logger, keyId, expirationDate, null);
         }
+
         public static void NotConsideringDefaultKey(this ILogger logger, Guid keyId)
         {
             _notConsideringDefaultKey(logger, keyId, null);
         }
+
+        public static void PerformingProtect(this ILogger logger, Guid keyId, string purposes)
+        {
+            _performingProtect(logger, keyId, purposes, null);
+        }
+
+        public static void PerformingUnpotect(this ILogger logger, Guid keyId, string purposes)
+        {
+            _performingProtect(logger, keyId, purposes, null);
+        }
+
+        public static void KeyNotFoundInKeyRing(this ILogger logger, Guid keyId)
+        {
+            _keyNotFoundInKeyRing(logger, keyId, null);
+        }
+
+        public static void KeyRevokedProceeding(this ILogger logger, Guid keyId)
+        {
+            _keyRevokedProceeding(logger, keyId, null);
+        }
+
+        public static void KeyRevokedNotProceeding(this ILogger logger, Guid keyId)
+        {
+            _keyRevokedNotProceeding(logger, keyId, null);
+        }
+
+
+
+        public static void NewKeyShouldBeAddedToKeyRing(this ILogger logger)
+        {
+            if (logger.IsVerboseLevelEnabled())
+            {
+                logger.LogVerbose("Policy resolution states that a new key should be added to the key ring.");
+            }
+        }
+
+        public static void KeyRingDoesNotContainKeyAutogenerationDisabled(this ILogger logger)
+        {
+            if (logger.IsVerboseLevelEnabled())
+            {
+                logger.LogVerbose("The key ring does not contain a valid default key, and the key manager is configured with auto-generation of keys disabled.");
+            }
+        }
+
+
+
 
         public static void DefaultKeyImminentAndRepositoryContainsNotSuccessor(this ILogger logger)
         {
