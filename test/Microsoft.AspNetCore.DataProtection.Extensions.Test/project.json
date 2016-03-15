@@ -8,6 +8,7 @@
     },
     "Microsoft.AspNetCore.Testing": "1.0.0-*",
     "Microsoft.NETCore.Platforms": "1.0.1-*",
+    "System.Threading.Tasks": "4.0.11-*",
     "xunit": "2.1.0"
   },
   "frameworks": {
@@ -30,10 +31,6 @@
       "dependencies": {
         "Moq": "4.2.1312.1622",
         "xunit.runner.console": "2.1.0"
-      },
-      "frameworkAssemblies": {
-        "System.Runtime": "",
-        "System.Threading.Tasks": ""
       }
     }
   },
