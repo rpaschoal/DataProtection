@@ -27,10 +27,16 @@
     },
     "netstandard1.3": {
       "dependencies": {
-        "Microsoft.Win32.Registry": "4.0.0-*",
+        "Microsoft.Win32.Registry": {
+            "version": "4.0.0-*",
+            "suppressParent": "compile"
+        },
         "System.Security.Cryptography.X509Certificates": "4.0.0-*",
         "System.Security.Claims": "4.0.1-*",
-        "System.Security.Principal.Windows": "4.0.0-*",
+        "System.Security.Principal.Windows": {
+          "version": "4.0.0-*",
+          "suppressParent": "compile"
+        },
         "System.Xml.XDocument": "4.0.11-*"
       },
       "imports": [

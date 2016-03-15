@@ -11,7 +11,11 @@
     "netstandardapp1.5": {
       "dependencies": {
         "dotnet-test-xunit": "1.0.0-dev-*",
-        "System.Diagnostics.Process": "4.1.0-*"
+        "System.Diagnostics.Process": "4.1.0-*",
+        "System.Security.Cryptography.Cng": {
+            "version": "4.0.0-*",
+            "exclude": "compile" 
+        }
       },
       "imports": [
         "dnxcore50",
