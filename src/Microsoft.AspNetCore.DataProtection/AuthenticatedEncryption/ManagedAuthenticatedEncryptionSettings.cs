@@ -16,6 +16,18 @@ namespace Microsoft.AspNetCore.DataProtection.AuthenticatedEncryption
     /// </summary>
     public sealed class ManagedAuthenticatedEncryptionSettings : IInternalAuthenticatedEncryptionSettings
     {
+        private readonly ILoggerFactory _loggerFactory;
+
+        public ManagedAuthenticatedEncryptionSettings()
+            : this(loggerFactory: null)
+        {
+        }
+
+        public ManagedAuthenticatedEncryptionSettings(ILoggerFactory loggerFactory)
+        {
+            _loggerFactory = loggerFactory;
+        }
+
         /// <summary>
         /// The type of the algorithm to use for symmetric encryption.
         /// The type must subclass <see cref="SymmetricAlgorithm"/>.
@@ -134,9 +146,9 @@ namespace Microsoft.AspNetCore.DataProtection.AuthenticatedEncryption
             }
         }
 
-        IInternalAuthenticatedEncryptorConfiguration IInternalAuthenticatedEncryptionSettings.ToConfiguration(IServiceProvider services)
+        IInternalAuthenticatedEncryptorConfiguration IInternalAuthenticatedEncryptionSettings.ToConfiguration()
         {
-            return new ManagedAuthenticatedEncryptorConfiguration(this, services);
+            return new ManagedAuthenticatedEncryptorConfiguration(this, _loggerFactory);
         }
 
         /// <summary>

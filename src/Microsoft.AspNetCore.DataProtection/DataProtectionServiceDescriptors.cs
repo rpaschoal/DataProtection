@@ -66,7 +66,7 @@ namespace Microsoft.Extensions.DependencyInjection
         /// </summary>
         public static ServiceDescriptor IAuthenticatedEncryptorConfiguration_FromSettings(IInternalAuthenticatedEncryptionSettings options)
         {
-            return ServiceDescriptor.Singleton<IAuthenticatedEncryptorConfiguration>(options.ToConfiguration);
+            return ServiceDescriptor.Singleton<IAuthenticatedEncryptorConfiguration>(options.ToConfiguration());
         }
 
 #if !NETSTANDARD1_3 // [[ISSUE60]] Remove this #ifdef when Core CLR gets support for EncryptedXml

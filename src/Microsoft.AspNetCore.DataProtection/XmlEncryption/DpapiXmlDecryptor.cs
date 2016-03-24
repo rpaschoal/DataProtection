@@ -20,7 +20,7 @@ namespace Microsoft.AspNetCore.DataProtection.XmlEncryption
         /// Creates a new instance of a <see cref="DpapiXmlDecryptor"/>.
         /// </summary>
         public DpapiXmlDecryptor()
-            : this(services: null)
+            : this(loggerFactory: null)
         {
         }
 
@@ -28,11 +28,11 @@ namespace Microsoft.AspNetCore.DataProtection.XmlEncryption
         /// Creates a new instance of a <see cref="DpapiXmlDecryptor"/>.
         /// </summary>
         /// <param name="services">An optional <see cref="IServiceProvider"/> to provide ancillary services.</param>
-        public DpapiXmlDecryptor(IServiceProvider services)
+        public DpapiXmlDecryptor(ILoggerFactory loggerFactory)
         {
             CryptoUtil.AssertPlatformIsWindows();
 
-            _logger = services.GetLogger<DpapiXmlDecryptor>();
+            _logger = loggerFactory?.CreateLogger<DpapiXmlDecryptor>();
         }
 
         /// <summary>

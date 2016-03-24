@@ -25,12 +25,8 @@ namespace Microsoft.AspNetCore.DataProtection.Repositories
         /// </summary>
         /// <param name="directory">The directory in which to persist key material.</param>
         public FileSystemXmlRepository(DirectoryInfo directory)
-            : this(directory, services: null)
+            : this(directory, loggerFactory: null)
         {
-            if (directory == null)
-            {
-                throw new ArgumentNullException(nameof(directory));
-            }
         }
 
         /// <summary>
@@ -38,7 +34,7 @@ namespace Microsoft.AspNetCore.DataProtection.Repositories
         /// </summary>
         /// <param name="directory">The directory in which to persist key material.</param>
         /// <param name="services">An optional <see cref="IServiceProvider"/> to provide ancillary services.</param>
-        public FileSystemXmlRepository(DirectoryInfo directory, IServiceProvider services)
+        public FileSystemXmlRepository(DirectoryInfo directory, ILoggerFactory loggerFactory)
         {
             if (directory == null)
             {
@@ -46,8 +42,7 @@ namespace Microsoft.AspNetCore.DataProtection.Repositories
             }
 
             Directory = directory;
-            Services = services;
-            _logger = services?.GetLogger<FileSystemXmlRepository>();
+            _logger = loggerFactory?.CreateLogger<FileSystemXmlRepository>();
         }
 
         /// <summary>
@@ -64,11 +59,6 @@ namespace Microsoft.AspNetCore.DataProtection.Repositories
         /// The directory into which key material will be written.
         /// </summary>
         public DirectoryInfo Directory { get; }
-
-        /// <summary>
-        /// The <see cref="IServiceProvider"/> provided to the constructor.
-        /// </summary>
-        protected IServiceProvider Services { get; }
 
         private const string DataProtectionKeysFolderName = "DataProtection-Keys";
 

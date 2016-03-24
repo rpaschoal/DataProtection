@@ -3,6 +3,7 @@
 
 using System;
 using System.Xml.Linq;
+using Microsoft.Extensions.Logging;
 
 namespace Microsoft.AspNetCore.DataProtection.AuthenticatedEncryption.ConfigurationModel
 {
@@ -12,16 +13,16 @@ namespace Microsoft.AspNetCore.DataProtection.AuthenticatedEncryption.Configurat
     /// </summary>
     public sealed class CngGcmAuthenticatedEncryptorDescriptorDeserializer : IAuthenticatedEncryptorDescriptorDeserializer
     {
-        private readonly IServiceProvider _services;
+        private readonly ILoggerFactory _loggerFactory;
 
         public CngGcmAuthenticatedEncryptorDescriptorDeserializer()
-            : this(services: null)
+            : this(loggerFactory: null)
         {
         }
 
-        public CngGcmAuthenticatedEncryptorDescriptorDeserializer(IServiceProvider services)
+        public CngGcmAuthenticatedEncryptorDescriptorDeserializer(ILoggerFactory loggerFactory)
         {
-            _services = services;
+            _loggerFactory = loggerFactory;
         }
 
         /// <summary>
@@ -40,7 +41,7 @@ namespace Microsoft.AspNetCore.DataProtection.AuthenticatedEncryption.Configurat
             //   <masterKey>...</masterKey>
             // </descriptor>
 
-            var settings = new CngGcmAuthenticatedEncryptionSettings();
+            var settings = new CngGcmAuthenticatedEncryptionSettings(_loggerFactory);
 
             var encryptionElement = element.Element("encryption");
             settings.EncryptionAlgorithm = (string)encryptionElement.Attribute("algorithm");
@@ -49,7 +50,7 @@ namespace Microsoft.AspNetCore.DataProtection.AuthenticatedEncryption.Configurat
 
             Secret masterKey = ((string)element.Element("masterKey")).ToSecret();
 
-            return new CngGcmAuthenticatedEncryptorDescriptor(settings, masterKey, _services);
+            return new CngGcmAuthenticatedEncryptorDescriptor(settings, masterKey, _loggerFactory);
         }
     }
 }

@@ -15,6 +15,13 @@ namespace Microsoft.AspNetCore.DataProtection.AuthenticatedEncryption
     /// </summary>
     public sealed class AuthenticatedEncryptionSettings : IInternalAuthenticatedEncryptionSettings
     {
+        private readonly ILoggerFactory _loggerFactory;
+
+        public AuthenticatedEncryptionSettings(ILoggerFactory loggerFactory)
+        {
+            _loggerFactory = loggerFactory;
+        }
+
         /// <summary>
         /// The algorithm to use for symmetric encryption (confidentiality).
         /// </summary>
@@ -55,10 +62,10 @@ namespace Microsoft.AspNetCore.DataProtection.AuthenticatedEncryption
          * HELPER ROUTINES
          */
 
-        internal IAuthenticatedEncryptor CreateAuthenticatedEncryptorInstance(ISecret secret, IServiceProvider services = null)
+        internal IAuthenticatedEncryptor CreateAuthenticatedEncryptorInstance(ISecret secret)
         {
             return CreateImplementationOptions()
-                .ToConfiguration(services)
+                .ToConfiguration()
                 .CreateDescriptorFromSecret(secret)
                 .CreateEncryptorInstance();
         }
@@ -72,7 +79,7 @@ namespace Microsoft.AspNetCore.DataProtection.AuthenticatedEncryption
                 {
                     throw new PlatformNotSupportedException(Resources.Platform_WindowsRequiredForGcm);
                 }
-                return new CngGcmAuthenticatedEncryptionSettings()
+                return new CngGcmAuthenticatedEncryptionSettings(_loggerFactory)
                 {
                     EncryptionAlgorithm = GetBCryptAlgorithmName(EncryptionAlgorithm),
                     EncryptionAlgorithmKeySize = GetAlgorithmKeySizeInBits(EncryptionAlgorithm)
@@ -83,7 +90,7 @@ namespace Microsoft.AspNetCore.DataProtection.AuthenticatedEncryption
                 if (OSVersionUtil.IsWindows())
                 {
                     // CNG preferred over managed implementations if running on Windows
-                    return new CngCbcAuthenticatedEncryptionSettings()
+                    return new CngCbcAuthenticatedEncryptionSettings(_loggerFactory)
                     {
                         EncryptionAlgorithm = GetBCryptAlgorithmName(EncryptionAlgorithm),
                         EncryptionAlgorithmKeySize = GetAlgorithmKeySizeInBits(EncryptionAlgorithm),
@@ -93,7 +100,7 @@ namespace Microsoft.AspNetCore.DataProtection.AuthenticatedEncryption
                 else
                 {
                     // Use managed implementations as a fallback
-                    return new ManagedAuthenticatedEncryptionSettings()
+                    return new ManagedAuthenticatedEncryptionSettings(_loggerFactory)
                     {
                         EncryptionAlgorithmType = GetManagedTypeForAlgorithm(EncryptionAlgorithm),
                         EncryptionAlgorithmKeySize = GetAlgorithmKeySizeInBits(EncryptionAlgorithm),
@@ -193,9 +200,9 @@ namespace Microsoft.AspNetCore.DataProtection.AuthenticatedEncryption
             return (EncryptionAlgorithm.AES_128_GCM <= algorithm && algorithm <= EncryptionAlgorithm.AES_256_GCM);
         }
 
-        IInternalAuthenticatedEncryptorConfiguration IInternalAuthenticatedEncryptionSettings.ToConfiguration(IServiceProvider services)
+        IInternalAuthenticatedEncryptorConfiguration IInternalAuthenticatedEncryptionSettings.ToConfiguration()
         {
-            return new AuthenticatedEncryptorConfiguration(this, services);
+            return new AuthenticatedEncryptorConfiguration(this, _loggerFactory);
         }
     }
 }

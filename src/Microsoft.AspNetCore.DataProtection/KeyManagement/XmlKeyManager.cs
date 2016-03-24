@@ -15,7 +15,6 @@ using Microsoft.AspNetCore.DataProtection.Internal;
 using Microsoft.AspNetCore.DataProtection.KeyManagement.Internal;
 using Microsoft.AspNetCore.DataProtection.Repositories;
 using Microsoft.AspNetCore.DataProtection.XmlEncryption;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
 using static System.FormattableString;
@@ -55,11 +54,26 @@ namespace Microsoft.AspNetCore.DataProtection.KeyManagement
         /// </summary>
         /// <param name="repository">The repository where keys are stored.</param>
         /// <param name="configuration">Configuration for newly-created keys.</param>
-        /// <param name="services">A provider of optional services.</param>
+        public XmlKeyManager(IXmlRepository repository, IAuthenticatedEncryptorConfiguration configuration)
+            : this(repository, configuration, keyEncryptor: null)
+        {
+        }
+
         public XmlKeyManager(
             IXmlRepository repository,
             IAuthenticatedEncryptorConfiguration configuration,
-            IServiceProvider services)
+            IXmlEncryptor keyEncryptor)
+            : this(repository, configuration, keyEncryptor, internalXmlKeyManager: null, escrowSinks: null, loggerFactory: null)
+        {
+        }
+
+        public XmlKeyManager(
+            IXmlRepository repository,
+            IAuthenticatedEncryptorConfiguration configuration,
+            IXmlEncryptor keyEncryptor,
+            IInternalXmlKeyManager internalXmlKeyManager,
+            IEnumerable<IKeyEscrowSink> escrowSinks,
+            ILoggerFactory loggerFactory)
         {
             if (repository == null)
             {
@@ -71,40 +85,19 @@ namespace Microsoft.AspNetCore.DataProtection.KeyManagement
                 throw new ArgumentNullException(nameof(configuration));
             }
 
-            KeyEncryptor = services.GetService<IXmlEncryptor>(); // optional
+            KeyEncryptor = keyEncryptor; // optional
             KeyRepository = repository;
 
-            _activator = services.GetActivator(); // returns non-null
+            _activator = new SimpleActivator(loggerFactory);
             _authenticatedEncryptorConfiguration = configuration;
-            _internalKeyManager = services.GetService<IInternalXmlKeyManager>() ?? this;
-            _keyEscrowSink = services.GetKeyEscrowSink(); // not required
-            _logger = services.GetLogger<XmlKeyManager>(); // not required
-            TriggerAndResetCacheExpirationToken(suppressLogging: true);
-        }
+            _internalKeyManager = internalXmlKeyManager ?? this;
 
-        internal XmlKeyManager(IServiceProvider services)
-        {
-            // First, see if an explicit encryptor or repository was specified.
-            // If either was specified, then we won't use the fallback.
-            KeyEncryptor = services.GetService<IXmlEncryptor>(); // optional
-            KeyRepository = (KeyEncryptor != null)
-                ? services.GetRequiredService<IXmlRepository>() // required if encryptor is specified
-                : services.GetService<IXmlRepository>(); // optional if encryptor not specified
-
-            // If the repository is missing, then we get both the encryptor and the repository from the fallback.
-            // If the fallback is missing, the final call to GetRequiredService below will throw.
-            if (KeyRepository == null)
+            if (escrowSinks != null && escrowSinks.Any())
             {
-                var defaultKeyServices = services.GetService<IDefaultKeyServices>();
-                KeyEncryptor = defaultKeyServices?.GetKeyEncryptor(); // optional
-                KeyRepository = defaultKeyServices?.GetKeyRepository() ?? services.GetRequiredService<IXmlRepository>();
+                _keyEscrowSink = new AggregateKeyEscrowSink(escrowSinks);
             }
 
-            _activator = services.GetActivator(); // returns non-null
-            _authenticatedEncryptorConfiguration = services.GetRequiredService<IAuthenticatedEncryptorConfiguration>();
-            _internalKeyManager = services.GetService<IInternalXmlKeyManager>() ?? this;
-            _keyEscrowSink = services.GetKeyEscrowSink(); // not required
-            _logger = services.GetLogger<XmlKeyManager>(); // not required
+            _logger = loggerFactory?.CreateLogger<XmlKeyManager>();
             TriggerAndResetCacheExpirationToken(suppressLogging: true);
         }
 
@@ -420,7 +413,11 @@ namespace Microsoft.AspNetCore.DataProtection.KeyManagement
 
                 // Decrypt the descriptor element and pass it to the descriptor for consumption
                 XElement unencryptedInputToDeserializer = descriptorElement.Elements().Single().DecryptElement(_activator);
-                var deserializerInstance = _activator.CreateInstance<IAuthenticatedEncryptorDescriptorDeserializer>(descriptorDeserializerTypeName);
+                var deserializerInstance = 
+                    _activator.CreateInstance(
+                        typeof(IAuthenticatedEncryptorDescriptorDeserializer),
+                        descriptorDeserializerTypeName)
+                    as IAuthenticatedEncryptorDescriptorDeserializer;
                 var descriptorInstance = deserializerInstance.ImportFromXml(unencryptedInputToDeserializer);
 
                 return descriptorInstance ?? CryptoUtil.Fail<IAuthenticatedEncryptorDescriptor>("ImportFromXml returned null.");
@@ -453,6 +450,66 @@ namespace Microsoft.AspNetCore.DataProtection.KeyManagement
             string friendlyName = Invariant($"revocation-{keyId:D}");
             KeyRepository.StoreElement(revocationElement, friendlyName);
             TriggerAndResetCacheExpirationToken();
+        }
+
+        private sealed class AggregateKeyEscrowSink : IKeyEscrowSink
+        {
+            private readonly IEnumerable<IKeyEscrowSink> _sinks;
+
+            public AggregateKeyEscrowSink(IEnumerable<IKeyEscrowSink> sinks)
+            {
+                _sinks = sinks;
+            }
+
+            public void Store(Guid keyId, XElement element)
+            {
+                foreach (var sink in _sinks)
+                {
+                    sink.Store(keyId, element);
+                }
+            }
+        }
+
+        /// <summary>
+        /// A simplified default implementation of <see cref="IActivator"/> that understands
+        /// how to call ctors which take <see cref="ILoggerFactory"/>.
+        /// </summary>
+        private sealed class SimpleActivator : IActivator
+        {
+            private readonly ILoggerFactory _loggerFactory;
+
+            public SimpleActivator(ILoggerFactory loggerFactory)
+            {
+                _loggerFactory = loggerFactory;
+            }
+
+            public object CreateInstance(Type expectedBaseType, string implementationTypeName)
+            {
+                // Would the assignment even work?
+                var implementationType = Type.GetType(implementationTypeName, throwOnError: true);
+                expectedBaseType.AssertIsAssignableFrom(implementationType);
+
+                // If no ILoggerFactory was specified, prefer .ctor() [if it exists]
+                if (_loggerFactory == null)
+                {
+                    var ctorParameterless = implementationType.GetConstructor(Type.EmptyTypes);
+                    if (ctorParameterless != null)
+                    {
+                        return Activator.CreateInstance(implementationType);
+                    }
+                }
+
+                // If an ILoggerFactory was specified or if .ctor() doesn't exist, prefer .ctor(ILoggerFactory) [if it exists]
+                var ctorWhichTakesLoggerFactory = implementationType.GetConstructor(new Type[] { typeof(ILoggerFactory) });
+                if (ctorWhichTakesLoggerFactory != null)
+                {
+                    return ctorWhichTakesLoggerFactory.Invoke(new[] { _loggerFactory });
+                }
+
+                // Finally, prefer .ctor() as an ultimate fallback.
+                // This will throw if the ctor cannot be called.
+                return Activator.CreateInstance(implementationType);
+            }
         }
     }
 }

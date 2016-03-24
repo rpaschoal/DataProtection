@@ -18,13 +18,13 @@ namespace Microsoft.AspNetCore.DataProtection.XmlEncryption
         private readonly ILogger _logger;
 
         public EncryptedXmlDecryptor()
-            : this(services: null)
+            : this(loggerFactory: null)
         {
         }
 
-        public EncryptedXmlDecryptor(IServiceProvider services)
+        public EncryptedXmlDecryptor(ILoggerFactory loggerFactory)
         {
-            _logger = services.GetLogger<EncryptedXmlDecryptor>();
+            _logger = loggerFactory?.CreateLogger<EncryptedXmlDecryptor>();
         }
 
         public XElement Decrypt(XElement encryptedElement)

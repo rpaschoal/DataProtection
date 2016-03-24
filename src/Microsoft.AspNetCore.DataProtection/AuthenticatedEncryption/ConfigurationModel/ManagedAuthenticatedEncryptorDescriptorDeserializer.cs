@@ -4,6 +4,7 @@
 using System;
 using System.Security.Cryptography;
 using System.Xml.Linq;
+using Microsoft.Extensions.Logging;
 
 namespace Microsoft.AspNetCore.DataProtection.AuthenticatedEncryption.ConfigurationModel
 {
@@ -13,16 +14,16 @@ namespace Microsoft.AspNetCore.DataProtection.AuthenticatedEncryption.Configurat
     /// </summary>
     public sealed class ManagedAuthenticatedEncryptorDescriptorDeserializer : IAuthenticatedEncryptorDescriptorDeserializer
     {
-        private readonly IServiceProvider _services;
+        private readonly ILoggerFactory _loggerFactory;
 
         public ManagedAuthenticatedEncryptorDescriptorDeserializer()
-            : this(services: null)
+            : this(loggerFactory: null)
         {
         }
 
-        public ManagedAuthenticatedEncryptorDescriptorDeserializer(IServiceProvider services)
+        public ManagedAuthenticatedEncryptorDescriptorDeserializer(ILoggerFactory loggerFactory)
         {
-            _services = services;
+            _loggerFactory = loggerFactory;
         }
 
         /// <summary>
@@ -42,7 +43,7 @@ namespace Microsoft.AspNetCore.DataProtection.AuthenticatedEncryption.Configurat
             //   <masterKey>...</masterKey>
             // </descriptor>
 
-            var settings = new ManagedAuthenticatedEncryptionSettings();
+            var settings = new ManagedAuthenticatedEncryptionSettings(_loggerFactory);
 
             var encryptionElement = element.Element("encryption");
             settings.EncryptionAlgorithmType = FriendlyNameToType((string)encryptionElement.Attribute("algorithm"));
@@ -53,7 +54,7 @@ namespace Microsoft.AspNetCore.DataProtection.AuthenticatedEncryption.Configurat
 
             Secret masterKey = ((string)element.Element("masterKey")).ToSecret();
 
-            return new ManagedAuthenticatedEncryptorDescriptor(settings, masterKey, _services);
+            return new ManagedAuthenticatedEncryptorDescriptor(settings, masterKey, _loggerFactory);
         }
 
         // Any changes to this method should also be be reflected

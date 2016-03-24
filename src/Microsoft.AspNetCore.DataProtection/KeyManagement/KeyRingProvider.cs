@@ -7,7 +7,6 @@ using System.Diagnostics;
 using System.Threading;
 using Microsoft.AspNetCore.Cryptography;
 using Microsoft.AspNetCore.DataProtection.KeyManagement.Internal;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
 namespace Microsoft.AspNetCore.DataProtection.KeyManagement
@@ -22,14 +21,18 @@ namespace Microsoft.AspNetCore.DataProtection.KeyManagement
         private readonly IKeyManager _keyManager;
         private readonly ILogger _logger;
 
-        public KeyRingProvider(IKeyManager keyManager, KeyManagementOptions keyManagementOptions, IServiceProvider services)
+        public KeyRingProvider(
+            IKeyManager keyManager,
+            KeyManagementOptions keyManagementOptions,
+            ILoggerFactory loggerFactory,
+            IDefaultKeyResolver defaultKeyResolver,
+            ICacheableKeyRingProvider cacheableKeyRingProvider)
         {
             _keyManagementOptions = new KeyManagementOptions(keyManagementOptions); // clone so new instance is immutable
             _keyManager = keyManager;
-            _cacheableKeyRingProvider = services?.GetService<ICacheableKeyRingProvider>() ?? this;
-            _logger = services?.GetLogger<KeyRingProvider>();
-            _defaultKeyResolver = services?.GetService<IDefaultKeyResolver>()
-                ?? new DefaultKeyResolver(_keyManagementOptions.KeyPropagationWindow, _keyManagementOptions.MaxServerClockSkew, services);
+            _cacheableKeyRingProvider = cacheableKeyRingProvider ?? this;
+            _logger = loggerFactory?.CreateLogger<KeyRingProvider>();
+            _defaultKeyResolver = defaultKeyResolver;
         }
 
         private CacheableKeyRing CreateCacheableKeyRingCore(DateTimeOffset now, IKey keyJustAdded)

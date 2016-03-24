@@ -17,6 +17,18 @@ namespace Microsoft.AspNetCore.DataProtection.AuthenticatedEncryption
     /// </summary>
     public sealed class CngGcmAuthenticatedEncryptionSettings : IInternalAuthenticatedEncryptionSettings
     {
+        private readonly ILoggerFactory _loggerFactory;
+
+        public CngGcmAuthenticatedEncryptionSettings()
+            : this(loggerFactory: null)
+        {
+        }
+
+        public CngGcmAuthenticatedEncryptionSettings(ILoggerFactory loggerFactory)
+        {
+            _loggerFactory = loggerFactory;
+        }
+
         /// <summary>
         /// The name of the algorithm to use for symmetric encryption.
         /// This property corresponds to the 'pszAlgId' parameter of BCryptOpenAlgorithmProvider.
@@ -117,9 +129,9 @@ namespace Microsoft.AspNetCore.DataProtection.AuthenticatedEncryption
             return algorithmHandle;
         }
 
-        IInternalAuthenticatedEncryptorConfiguration IInternalAuthenticatedEncryptionSettings.ToConfiguration(IServiceProvider services)
+        IInternalAuthenticatedEncryptorConfiguration IInternalAuthenticatedEncryptionSettings.ToConfiguration()
         {
-            return new CngGcmAuthenticatedEncryptorConfiguration(this, services);
+            return new CngGcmAuthenticatedEncryptorConfiguration(this, _loggerFactory);
         }
     }
 }

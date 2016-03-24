@@ -4,6 +4,7 @@
 using System;
 using System.Linq;
 using System.Xml.Linq;
+using Microsoft.Extensions.Logging;
 
 namespace Microsoft.AspNetCore.DataProtection.AuthenticatedEncryption.ConfigurationModel
 {
@@ -13,16 +14,16 @@ namespace Microsoft.AspNetCore.DataProtection.AuthenticatedEncryption.Configurat
     /// </summary>
     public sealed class AuthenticatedEncryptorDescriptorDeserializer : IAuthenticatedEncryptorDescriptorDeserializer
     {
-        private readonly IServiceProvider _services;
+        private readonly ILoggerFactory _loggerFactory;
 
         public AuthenticatedEncryptorDescriptorDeserializer()
-            : this(services: null)
+            : this(loggerFactory: null)
         {
         }
 
-        public AuthenticatedEncryptorDescriptorDeserializer(IServiceProvider services)
+        public AuthenticatedEncryptorDescriptorDeserializer(ILoggerFactory loggerFactory)
         {
-            _services = services;
+            _loggerFactory = loggerFactory;
         }
 
         /// <summary>
@@ -41,7 +42,7 @@ namespace Microsoft.AspNetCore.DataProtection.AuthenticatedEncryption.Configurat
             //   <masterKey requiresEncryption="true">...</masterKey>
             // </descriptor>
 
-            var settings = new AuthenticatedEncryptionSettings();
+            var settings = new AuthenticatedEncryptionSettings(_loggerFactory);
 
             var encryptionElement = element.Element("encryption");
             settings.EncryptionAlgorithm = (EncryptionAlgorithm)Enum.Parse(typeof(EncryptionAlgorithm), (string)encryptionElement.Attribute("algorithm"));
@@ -54,7 +55,7 @@ namespace Microsoft.AspNetCore.DataProtection.AuthenticatedEncryption.Configurat
             }
 
             Secret masterKey = ((string)element.Elements("masterKey").Single()).ToSecret();
-            return new AuthenticatedEncryptorDescriptor(settings, masterKey, _services);
+            return new AuthenticatedEncryptorDescriptor(settings, masterKey, _loggerFactory);
         }
     }
 }

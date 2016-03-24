@@ -26,7 +26,7 @@ namespace Microsoft.AspNetCore.DataProtection
         /// Creates an ephemeral <see cref="IDataProtectionProvider"/>.
         /// </summary>
         public EphemeralDataProtectionProvider()
-            : this(services: null)
+            : this(loggerFactory: null)
         {
         }
 
@@ -34,7 +34,7 @@ namespace Microsoft.AspNetCore.DataProtection
         /// Creates an ephemeral <see cref="IDataProtectionProvider"/>, optionally providing
         /// services (such as logging) for consumption by the provider.
         /// </summary>
-        public EphemeralDataProtectionProvider(IServiceProvider services)
+        public EphemeralDataProtectionProvider(ILoggerFactory loggerFactory)
         {
             IKeyRingProvider keyringProvider;
             if (OSVersionUtil.IsWindows())
@@ -48,10 +48,10 @@ namespace Microsoft.AspNetCore.DataProtection
                 keyringProvider = new EphemeralKeyRing<ManagedAuthenticatedEncryptionSettings>();
             }
 
-            var logger = services.GetLogger<EphemeralDataProtectionProvider>();
+            var logger = loggerFactory?.CreateLogger<EphemeralDataProtectionProvider>();
             logger?.UsingEphemeralDataProtectionProvider();
 
-            _dataProtectionProvider = new KeyRingBasedDataProtectionProvider(keyringProvider, services);
+            _dataProtectionProvider = new KeyRingBasedDataProtectionProvider(keyringProvider, loggerFactory);
         }
 
         public IDataProtector CreateProtector(string purpose)
@@ -71,7 +71,7 @@ namespace Microsoft.AspNetCore.DataProtection
             // Currently hardcoded to a 512-bit KDK.
             private const int NUM_BYTES_IN_KDK = 512 / 8;
 
-            public IAuthenticatedEncryptor DefaultAuthenticatedEncryptor { get; } = new T().ToConfiguration(services: null).CreateNewDescriptor().CreateEncryptorInstance();
+            public IAuthenticatedEncryptor DefaultAuthenticatedEncryptor { get; } = new T().ToConfiguration().CreateNewDescriptor().CreateEncryptorInstance();
 
             public Guid DefaultKeyId { get; } = default(Guid);
 

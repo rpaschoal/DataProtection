@@ -21,13 +21,8 @@ namespace Microsoft.AspNetCore.DataProtection.XmlEncryption
         private readonly ILogger _logger;
         private readonly bool _protectToLocalMachine;
 
-        /// <summary>
-        /// Creates a <see cref="DpapiXmlEncryptor"/> given a protection scope.
-        /// </summary>
-        /// <param name="protectToLocalMachine">'true' if the data should be decipherable by anybody on the local machine,
-        /// 'false' if the data should only be decipherable by the current Windows user account.</param>
         public DpapiXmlEncryptor(bool protectToLocalMachine)
-            : this(protectToLocalMachine, services: null)
+            : this(protectToLocalMachine, loggerFactory: null)
         {
         }
 
@@ -37,12 +32,12 @@ namespace Microsoft.AspNetCore.DataProtection.XmlEncryption
         /// <param name="protectToLocalMachine">'true' if the data should be decipherable by anybody on the local machine,
         /// 'false' if the data should only be decipherable by the current Windows user account.</param>
         /// <param name="services">An optional <see cref="IServiceProvider"/> to provide ancillary services.</param>
-        public DpapiXmlEncryptor(bool protectToLocalMachine, IServiceProvider services)
+        public DpapiXmlEncryptor(bool protectToLocalMachine, ILoggerFactory loggerFactory)
         {
             CryptoUtil.AssertPlatformIsWindows();
 
             _protectToLocalMachine = protectToLocalMachine;
-            _logger = services.GetLogger<DpapiXmlEncryptor>();
+            _logger = loggerFactory?.CreateLogger<DpapiXmlEncryptor>();
         }
 
         /// <summary>

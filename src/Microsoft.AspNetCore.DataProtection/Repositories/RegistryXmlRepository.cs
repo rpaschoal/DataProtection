@@ -27,12 +27,8 @@ namespace Microsoft.AspNetCore.DataProtection.Repositories
         /// </summary>
         /// <param name="registryKey">The registry key in which to persist key material.</param>
         public RegistryXmlRepository(RegistryKey registryKey)
-            : this(registryKey, services: null)
+            : this(registryKey, loggerFactory: null)
         {
-            if (registryKey == null)
-            {
-                throw new ArgumentNullException(nameof(registryKey));
-            }
         }
 
         /// <summary>
@@ -40,7 +36,7 @@ namespace Microsoft.AspNetCore.DataProtection.Repositories
         /// </summary>
         /// <param name="registryKey">The registry key in which to persist key material.</param>
         /// <param name="services">The <see cref="IServiceProvider"/> used to resolve services.</param>
-        public RegistryXmlRepository(RegistryKey registryKey, IServiceProvider services)
+        public RegistryXmlRepository(RegistryKey registryKey, ILoggerFactory loggerFactory)
         {
             if (registryKey == null)
             {
@@ -48,8 +44,7 @@ namespace Microsoft.AspNetCore.DataProtection.Repositories
             }
 
             RegistryKey = registryKey;
-            Services = services;
-            _logger = services?.GetLogger<RegistryXmlRepository>();
+            _logger = loggerFactory?.CreateLogger<RegistryXmlRepository>();
         }
 
         /// <summary>
@@ -66,11 +61,6 @@ namespace Microsoft.AspNetCore.DataProtection.Repositories
         /// The registry key into which key material will be written.
         /// </summary>
         public RegistryKey RegistryKey { get; }
-
-        /// <summary>
-        /// The <see cref="IServiceProvider"/> provided to the constructor.
-        /// </summary>
-        protected IServiceProvider Services { get; }
 
         public virtual IReadOnlyCollection<XElement> GetAllElements()
         {

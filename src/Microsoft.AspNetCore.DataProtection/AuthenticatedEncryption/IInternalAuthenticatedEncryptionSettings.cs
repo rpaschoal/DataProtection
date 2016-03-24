@@ -15,7 +15,7 @@ namespace Microsoft.AspNetCore.DataProtection.AuthenticatedEncryption
         /// Creates a <see cref="IInternalAuthenticatedEncryptorConfiguration"/> object
         /// from the given settings.
         /// </summary>
-        IInternalAuthenticatedEncryptorConfiguration ToConfiguration(IServiceProvider services);
+        IInternalAuthenticatedEncryptorConfiguration ToConfiguration();
 
         /// <summary>
         /// Performs a self-test of the algorithm specified by the settings object.
