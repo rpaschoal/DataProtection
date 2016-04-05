@@ -13,9 +13,7 @@ namespace Microsoft.AspNetCore.DataProtection.AuthenticatedEncryption.Configurat
     /// </summary>
     public sealed class AuthenticatedEncryptorDescriptor : IAuthenticatedEncryptorDescriptor
     {
-        private readonly ILoggerFactory _loggerFactory;
-
-        public AuthenticatedEncryptorDescriptor(AuthenticatedEncryptionSettings settings, ISecret masterKey, ILoggerFactory loggerFactory)
+        public AuthenticatedEncryptorDescriptor(AuthenticatedEncryptionSettings settings, ISecret masterKey)
         {
             if (settings == null)
             {
@@ -29,7 +27,6 @@ namespace Microsoft.AspNetCore.DataProtection.AuthenticatedEncryption.Configurat
 
             Settings = settings;
             MasterKey = masterKey;
-            _loggerFactory = loggerFactory;
         }
 
         internal ISecret MasterKey { get; }

@@ -202,7 +202,7 @@ namespace Microsoft.AspNetCore.DataProtection.AuthenticatedEncryption
 
         IInternalAuthenticatedEncryptorConfiguration IInternalAuthenticatedEncryptionSettings.ToConfiguration()
         {
-            return new AuthenticatedEncryptorConfiguration(this, _loggerFactory);
+            return new AuthenticatedEncryptorConfiguration(this);
         }
     }
 }

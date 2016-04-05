@@ -12,6 +12,7 @@ using Microsoft.AspNetCore.DataProtection.Repositories;
 using Microsoft.AspNetCore.DataProtection.XmlEncryption;
 using Microsoft.Extensions.Options;
 using Microsoft.Win32;
+using Microsoft.Extensions.Logging;
 
 #if !NETSTANDARD1_3 // [[ISSUE60]] Remove this #ifdef when Core CLR gets support for EncryptedXml
 using System.Security.Cryptography.X509Certificates;
@@ -41,7 +42,6 @@ namespace Microsoft.Extensions.DependencyInjection
         /// <summary>
         /// An <see cref="IConfigureOptions{KeyManagementOptions}"/> where the key lifetime is specified explicitly.
         /// </summary>
-
         public static ServiceDescriptor ConfigureOptions_DefaultKeyLifetime(int numDays)
         {
             return ServiceDescriptor.Transient<IConfigureOptions<KeyManagementOptions>>(services =>
@@ -58,7 +58,8 @@ namespace Microsoft.Extensions.DependencyInjection
         /// </summary>
         public static ServiceDescriptor IAuthenticatedEncryptorConfiguration_Default()
         {
-            return IAuthenticatedEncryptorConfiguration_FromSettings(new AuthenticatedEncryptionSettings());
+            return ServiceDescriptor.Singleton<IAuthenticatedEncryptorConfiguration>(services =>
+                new AuthenticatedEncryptorConfiguration(new AuthenticatedEncryptionSettings(services.GetService<ILoggerFactory>())));
         }
 
         /// <summary>
@@ -96,7 +97,8 @@ namespace Microsoft.Extensions.DependencyInjection
         /// </summary>
         public static ServiceDescriptor IDataProtectionProvider_Ephemeral()
         {
-            return ServiceDescriptor.Singleton<IDataProtectionProvider>(services => new EphemeralDataProtectionProvider(services));
+            return ServiceDescriptor.Singleton<IDataProtectionProvider>(services => new EphemeralDataProtectionProvider(
+                services.GetService<ILoggerFactory>()));
         }
 
         /// <summary>
@@ -115,7 +117,11 @@ namespace Microsoft.Extensions.DependencyInjection
         /// </summary>
         public static ServiceDescriptor IKeyManager_Default()
         {
-            return ServiceDescriptor.Singleton<IKeyManager>(services => new XmlKeyManager(services));
+            return ServiceDescriptor.Singleton<IKeyManager>(services => new XmlKeyManager(
+                services.GetService<IXmlRepository>(),
+                services.GetRequiredService<IAuthenticatedEncryptorConfiguration>(),
+                services.GetService<IXmlEncryptor>(),
+                services.GetService<ILoggerFactory>()));
         }
 
 #if !NETSTANDARD1_3 // [[ISSUE60]] Remove this #ifdef when Core CLR gets support for EncryptedXml
@@ -125,7 +131,9 @@ namespace Microsoft.Extensions.DependencyInjection
         /// </summary>
         public static ServiceDescriptor IXmlEncryptor_Certificate(X509Certificate2 certificate)
         {
-            return ServiceDescriptor.Singleton<IXmlEncryptor>(services => new CertificateXmlEncryptor(certificate, services));
+            return ServiceDescriptor.Singleton<IXmlEncryptor>(services => new CertificateXmlEncryptor(
+                certificate,
+                services.GetService<ILoggerFactory>()));
         }
 
         /// <summary>
@@ -136,7 +144,7 @@ namespace Microsoft.Extensions.DependencyInjection
             return ServiceDescriptor.Singleton<IXmlEncryptor>(services => new CertificateXmlEncryptor(
                 thumbprint: thumbprint,
                 certificateResolver: services.GetRequiredService<ICertificateResolver>(),
-                services: services));
+                loggerFactory: services.GetService<ILoggerFactory>()));
         }
 
 #endif
@@ -147,7 +155,9 @@ namespace Microsoft.Extensions.DependencyInjection
         public static ServiceDescriptor IXmlEncryptor_Dpapi(bool protectToMachine)
         {
             CryptoUtil.AssertPlatformIsWindows();
-            return ServiceDescriptor.Singleton<IXmlEncryptor>(services => new DpapiXmlEncryptor(protectToMachine, services));
+            return ServiceDescriptor.Singleton<IXmlEncryptor>(services => new DpapiXmlEncryptor(
+                protectToMachine,
+                services.GetService<ILoggerFactory>()));
         }
 
         /// <summary>
@@ -156,7 +166,10 @@ namespace Microsoft.Extensions.DependencyInjection
         public static ServiceDescriptor IXmlEncryptor_DpapiNG(string protectionDescriptorRule, DpapiNGProtectionDescriptorFlags flags)
         {
             CryptoUtil.AssertPlatformIsWindows8OrLater();
-            return ServiceDescriptor.Singleton<IXmlEncryptor>(services => new DpapiNGXmlEncryptor(protectionDescriptorRule, flags, services));
+            return ServiceDescriptor.Singleton<IXmlEncryptor>(services => new DpapiNGXmlEncryptor(
+                protectionDescriptorRule,
+                flags,
+                services.GetService<ILoggerFactory>()));
         }
 
         /// <summary>
@@ -164,7 +177,9 @@ namespace Microsoft.Extensions.DependencyInjection
         /// </summary>
         public static ServiceDescriptor IXmlRepository_FileSystem(DirectoryInfo directory)
         {
-            return ServiceDescriptor.Singleton<IXmlRepository>(services => new FileSystemXmlRepository(directory, services));
+            return ServiceDescriptor.Singleton<IXmlRepository>(services => new FileSystemXmlRepository(
+                directory,
+                services.GetService<ILoggerFactory>()));
         }
 
         /// <summary>
@@ -172,7 +187,8 @@ namespace Microsoft.Extensions.DependencyInjection
         /// </summary>
         public static ServiceDescriptor IXmlRepository_InMemory()
         {
-            return ServiceDescriptor.Singleton<IXmlRepository>(services => new EphemeralXmlRepository(services));
+            return ServiceDescriptor.Singleton<IXmlRepository>(services => new EphemeralXmlRepository(
+                services.GetService<ILoggerFactory>()));
         }
 
         /// <summary>
@@ -180,7 +196,9 @@ namespace Microsoft.Extensions.DependencyInjection
         /// </summary>
         public static ServiceDescriptor IXmlRepository_Registry(RegistryKey registryKey)
         {
-            return ServiceDescriptor.Singleton<IXmlRepository>(services => new RegistryXmlRepository(registryKey, services));
+            return ServiceDescriptor.Singleton<IXmlRepository>(services => new RegistryXmlRepository(
+                registryKey,
+                services.GetService<ILoggerFactory>()));
         }
     }
 }

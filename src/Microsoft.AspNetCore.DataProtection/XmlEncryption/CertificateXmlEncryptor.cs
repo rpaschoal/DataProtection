@@ -9,7 +9,6 @@ using System.Security.Cryptography.Xml;
 using System.Xml;
 using System.Xml.Linq;
 using Microsoft.AspNetCore.Cryptography;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
 namespace Microsoft.AspNetCore.DataProtection.XmlEncryption
@@ -31,7 +30,7 @@ namespace Microsoft.AspNetCore.DataProtection.XmlEncryption
         /// encrypt the key material. The certificate must be locatable by <paramref name="certificateResolver"/>.</param>
         /// <param name="certificateResolver">A resolver which can locate <see cref="X509Certificate2"/> objects.</param>
         public CertificateXmlEncryptor(string thumbprint, ICertificateResolver certificateResolver)
-            : this(thumbprint, certificateResolver, services: null)
+            : this(thumbprint, certificateResolver, loggerFactory: null)
         {
         }
 
@@ -44,8 +43,8 @@ namespace Microsoft.AspNetCore.DataProtection.XmlEncryption
         /// encrypt the key material. The certificate must be locatable by <paramref name="certificateResolver"/>.</param>
         /// <param name="certificateResolver">A resolver which can locate <see cref="X509Certificate2"/> objects.</param>
         /// <param name="services">An optional <see cref="IServiceProvider"/> to provide ancillary services.</param>
-        public CertificateXmlEncryptor(string thumbprint, ICertificateResolver certificateResolver, IServiceProvider services)
-            : this(services)
+        public CertificateXmlEncryptor(string thumbprint, ICertificateResolver certificateResolver, ILoggerFactory loggerFactory)
+            : this(loggerFactory, encryptor: null)
         {
             if (thumbprint == null)
             {
@@ -65,7 +64,7 @@ namespace Microsoft.AspNetCore.DataProtection.XmlEncryption
         /// </summary>
         /// <param name="certificate">The <see cref="X509Certificate2"/> with which to encrypt the key material.</param>
         public CertificateXmlEncryptor(X509Certificate2 certificate)
-            : this(certificate, services: null)
+            : this(certificate, loggerFactory: null)
         {
         }
 
@@ -75,8 +74,8 @@ namespace Microsoft.AspNetCore.DataProtection.XmlEncryption
         /// </summary>
         /// <param name="certificate">The <see cref="X509Certificate2"/> with which to encrypt the key material.</param>
         /// <param name="services">An optional <see cref="IServiceProvider"/> to provide ancillary services.</param>
-        public CertificateXmlEncryptor(X509Certificate2 certificate, IServiceProvider services)
-            : this(services)
+        public CertificateXmlEncryptor(X509Certificate2 certificate, ILoggerFactory loggerFactory)
+            : this(loggerFactory, encryptor: null)
         {
             if (certificate == null)
             {
@@ -86,10 +85,11 @@ namespace Microsoft.AspNetCore.DataProtection.XmlEncryption
             _certFactory = () => certificate;
         }
 
-        internal CertificateXmlEncryptor(IServiceProvider services)
+        // For unit testing
+        internal CertificateXmlEncryptor(ILoggerFactory loggerFactory, IInternalCertificateXmlEncryptor encryptor)
         {
-            _encryptor = services?.GetService<IInternalCertificateXmlEncryptor>() ?? this;
-            _logger = services.GetLogger<CertificateXmlEncryptor>();
+            _encryptor = encryptor ?? this;
+            _logger = loggerFactory?.CreateLogger<CertificateXmlEncryptor>();
         }
 
         /// <summary>

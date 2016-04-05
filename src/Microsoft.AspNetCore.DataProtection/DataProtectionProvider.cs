@@ -70,13 +70,14 @@ namespace Microsoft.AspNetCore.DataProtection
             var keyManager = new XmlKeyManager(
                 repository: xmlRepository,
                 configuration: authenticatedEncryptorConfiguration,
-                loggerFactory: loggerFactory,
                 keyEncryptor: xmlEncryptor,
                 internalXmlKeyManager: null,
-                escrowSinks: null);
+                escrowSinks: null,
+                loggerFactory: loggerFactory,
+                activator: new SimpleActivator(loggerFactory));
 
             var defaultKeyResolver = new DefaultKeyResolver(keyManagementOptions.KeyPropagationWindow, keyManagementOptions.MaxServerClockSkew, loggerFactory);
-            var keyRingProvider = new KeyRingProvider(keyManager, keyManagementOptions, loggerFactory, defaultKeyResolver, cacheableKeyRingProvider: null);
+            var keyRingProvider = new KeyRingProvider(keyManager, keyManagementOptions, defaultKeyResolver, loggerFactory);
 
             IDataProtectionProvider dataProtectionProvider = new KeyRingBasedDataProtectionProvider(keyRingProvider, loggerFactory);
             if (!string.IsNullOrEmpty(dataProtectionOptions.ApplicationDiscriminator))

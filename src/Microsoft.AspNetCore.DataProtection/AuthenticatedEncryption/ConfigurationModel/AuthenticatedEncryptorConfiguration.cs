@@ -11,9 +11,7 @@ namespace Microsoft.AspNetCore.DataProtection.AuthenticatedEncryption.Configurat
     /// </summary>
     public sealed class AuthenticatedEncryptorConfiguration : IAuthenticatedEncryptorConfiguration, IInternalAuthenticatedEncryptorConfiguration
     {
-        private readonly ILoggerFactory _loggerFactory;
-
-        public AuthenticatedEncryptorConfiguration(AuthenticatedEncryptionSettings settings, ILoggerFactory loggerFactory)
+        public AuthenticatedEncryptorConfiguration(AuthenticatedEncryptionSettings settings)
         {
             if (settings == null)
             {
@@ -21,7 +19,6 @@ namespace Microsoft.AspNetCore.DataProtection.AuthenticatedEncryption.Configurat
             }
 
             Settings = settings;
-            _loggerFactory = loggerFactory;
         }
 
         public AuthenticatedEncryptionSettings Settings { get; }
@@ -33,7 +30,7 @@ namespace Microsoft.AspNetCore.DataProtection.AuthenticatedEncryption.Configurat
 
         IAuthenticatedEncryptorDescriptor IInternalAuthenticatedEncryptorConfiguration.CreateDescriptorFromSecret(ISecret secret)
         {
-            return new AuthenticatedEncryptorDescriptor(Settings, secret, _loggerFactory);
+            return new AuthenticatedEncryptorDescriptor(Settings, secret);
         }
     }
 }

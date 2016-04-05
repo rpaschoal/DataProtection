@@ -55,7 +55,7 @@ namespace Microsoft.AspNetCore.DataProtection.AuthenticatedEncryption.Configurat
             }
 
             Secret masterKey = ((string)element.Elements("masterKey").Single()).ToSecret();
-            return new AuthenticatedEncryptorDescriptor(settings, masterKey, _loggerFactory);
+            return new AuthenticatedEncryptorDescriptor(settings, masterKey);
         }
     }
 }

@@ -48,7 +48,7 @@ namespace Microsoft.AspNetCore.DataProtection.XmlEncryption
                 var clonedElementWhichRequiresDecryption = new XElement(elementWhichRequiresDecryption);
                 var innerDoc = new XDocument(clonedElementWhichRequiresDecryption);
                 string decryptorTypeName = (string)clonedElementWhichRequiresDecryption.Attribute(XmlConstants.DecryptorTypeAttributeName);
-                var decryptorInstance = activator.CreateInstance(typeof(IXmlDecryptor), decryptorTypeName) as IXmlDecryptor;
+                var decryptorInstance = (IXmlDecryptor)activator.CreateInstance(typeof(IXmlDecryptor), decryptorTypeName);
                 var decryptedElement = decryptorInstance.Decrypt(clonedElementWhichRequiresDecryption.Elements().Single());
 
                 // Put a placeholder into the original document so that we can continue our

@@ -7,7 +7,6 @@ using System;
 using System.Security.Cryptography.Xml;
 using System.Xml;
 using System.Xml.Linq;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace Microsoft.AspNetCore.DataProtection.XmlEncryption
 {
@@ -22,17 +21,14 @@ namespace Microsoft.AspNetCore.DataProtection.XmlEncryption
         /// Creates a new instance of an <see cref="EncryptedXmlDecryptor"/>.
         /// </summary>
         public EncryptedXmlDecryptor()
-            : this(services: null)
+            : this(decryptor: null)
         {
         }
 
-        /// <summary>
-        /// Creates a new instance of an <see cref="EncryptedXmlDecryptor"/>.
-        /// </summary>
-        /// <param name="services">An optional <see cref="IServiceProvider"/> to provide ancillary services.</param>
-        public EncryptedXmlDecryptor(IServiceProvider services)
+        // For unit testing
+        internal EncryptedXmlDecryptor(IInternalEncryptedXmlDecryptor decryptor)
         {
-            _decryptor = services?.GetService<IInternalEncryptedXmlDecryptor>() ?? this;
+            _decryptor = decryptor ?? this;
         }
 
         /// <summary>

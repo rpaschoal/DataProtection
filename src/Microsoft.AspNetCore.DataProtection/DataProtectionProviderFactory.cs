@@ -3,7 +3,9 @@
 
 using System;
 using Microsoft.AspNetCore.DataProtection.KeyManagement;
+using Microsoft.AspNetCore.DataProtection.KeyManagement.Internal;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
 namespace Microsoft.AspNetCore.DataProtection
@@ -60,11 +62,13 @@ namespace Microsoft.AspNetCore.DataProtection
             // If all else fails, create a keyring manually based on the other registered services.
             if (dataProtectionProvider == null)
             {
+                var loggerFactory = services.GetService<ILoggerFactory>();
                 var keyRingProvider = new KeyRingProvider(
                     keyManager: services.GetRequiredService<IKeyManager>(),
                     keyManagementOptions: services.GetService<IOptions<KeyManagementOptions>>()?.Value, // might be null
-                    services: services);
-                dataProtectionProvider = new KeyRingBasedDataProtectionProvider(keyRingProvider, services);
+                    defaultKeyResolver: services.GetService<IDefaultKeyResolver>(),
+                    loggerFactory: loggerFactory);
+                dataProtectionProvider = new KeyRingBasedDataProtectionProvider(keyRingProvider, loggerFactory);
             }
 
             // Finally, link the provider to the supplied discriminator

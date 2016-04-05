@@ -55,15 +55,7 @@ namespace Microsoft.AspNetCore.DataProtection.KeyManagement
         /// <param name="repository">The repository where keys are stored.</param>
         /// <param name="configuration">Configuration for newly-created keys.</param>
         public XmlKeyManager(IXmlRepository repository, IAuthenticatedEncryptorConfiguration configuration)
-            : this(repository, configuration, keyEncryptor: null)
-        {
-        }
-
-        public XmlKeyManager(
-            IXmlRepository repository,
-            IAuthenticatedEncryptorConfiguration configuration,
-            IXmlEncryptor keyEncryptor)
-            : this(repository, configuration, keyEncryptor, internalXmlKeyManager: null, escrowSinks: null, loggerFactory: null)
+            : this(repository, configuration, keyEncryptor: null, loggerFactory: null)
         {
         }
 
@@ -71,24 +63,33 @@ namespace Microsoft.AspNetCore.DataProtection.KeyManagement
             IXmlRepository repository,
             IAuthenticatedEncryptorConfiguration configuration,
             IXmlEncryptor keyEncryptor,
+            ILoggerFactory loggerFactory)
+            : this(repository, configuration, keyEncryptor, internalXmlKeyManager: null, escrowSinks: null, loggerFactory: loggerFactory, activator: null)
+        {
+        }
+
+        internal XmlKeyManager(
+            IXmlRepository repository,
+            IAuthenticatedEncryptorConfiguration configuration,
+            IXmlEncryptor keyEncryptor,
             IInternalXmlKeyManager internalXmlKeyManager,
             IEnumerable<IKeyEscrowSink> escrowSinks,
-            ILoggerFactory loggerFactory)
+            ILoggerFactory loggerFactory,
+            IActivator activator)
         {
             if (repository == null)
             {
                 throw new ArgumentNullException(nameof(repository));
             }
-
             if (configuration == null)
             {
                 throw new ArgumentNullException(nameof(configuration));
             }
 
-            KeyEncryptor = keyEncryptor; // optional
+            KeyEncryptor = keyEncryptor;
             KeyRepository = repository;
 
-            _activator = new SimpleActivator(loggerFactory);
+            _activator = activator;
             _authenticatedEncryptorConfiguration = configuration;
             _internalKeyManager = internalXmlKeyManager ?? this;
 
@@ -467,48 +468,6 @@ namespace Microsoft.AspNetCore.DataProtection.KeyManagement
                 {
                     sink.Store(keyId, element);
                 }
-            }
-        }
-
-        /// <summary>
-        /// A simplified default implementation of <see cref="IActivator"/> that understands
-        /// how to call ctors which take <see cref="ILoggerFactory"/>.
-        /// </summary>
-        private sealed class SimpleActivator : IActivator
-        {
-            private readonly ILoggerFactory _loggerFactory;
-
-            public SimpleActivator(ILoggerFactory loggerFactory)
-            {
-                _loggerFactory = loggerFactory;
-            }
-
-            public object CreateInstance(Type expectedBaseType, string implementationTypeName)
-            {
-                // Would the assignment even work?
-                var implementationType = Type.GetType(implementationTypeName, throwOnError: true);
-                expectedBaseType.AssertIsAssignableFrom(implementationType);
-
-                // If no ILoggerFactory was specified, prefer .ctor() [if it exists]
-                if (_loggerFactory == null)
-                {
-                    var ctorParameterless = implementationType.GetConstructor(Type.EmptyTypes);
-                    if (ctorParameterless != null)
-                    {
-                        return Activator.CreateInstance(implementationType);
-                    }
-                }
-
-                // If an ILoggerFactory was specified or if .ctor() doesn't exist, prefer .ctor(ILoggerFactory) [if it exists]
-                var ctorWhichTakesLoggerFactory = implementationType.GetConstructor(new Type[] { typeof(ILoggerFactory) });
-                if (ctorWhichTakesLoggerFactory != null)
-                {
-                    return ctorWhichTakesLoggerFactory.Invoke(new[] { _loggerFactory });
-                }
-
-                // Finally, prefer .ctor() as an ultimate fallback.
-                // This will throw if the ctor cannot be called.
-                return Activator.CreateInstance(implementationType);
             }
         }
     }
