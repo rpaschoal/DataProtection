@@ -1,9 +1,6 @@
 // Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
-using System;
-using Microsoft.Extensions.Logging;
-
 namespace Microsoft.AspNetCore.DataProtection.AuthenticatedEncryption.ConfigurationModel
 {
     // This type is not public because we don't want to lock ourselves into a contract stating
@@ -20,5 +17,10 @@ namespace Microsoft.AspNetCore.DataProtection.AuthenticatedEncryption.Configurat
         /// configuration given specific secret key material.
         /// </summary>
         IAuthenticatedEncryptorDescriptor CreateDescriptorFromSecret(ISecret secret);
+
+        /// <summary>
+        /// Performs a self-test of the algorithm specified by the configuration object.
+        /// </summary>
+        void Validate();
     }
 }

@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading;
 using Microsoft.AspNetCore.Cryptography;
+using Microsoft.AspNetCore.DataProtection.AuthenticatedEncryption;
 using Microsoft.AspNetCore.DataProtection.KeyManagement.Internal;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -30,7 +31,10 @@ namespace Microsoft.AspNetCore.DataProtection.KeyManagement
             _logger = services?.GetLogger<KeyRingProvider>();
             _defaultKeyResolver = services?.GetService<IDefaultKeyResolver>()
                 ?? new DefaultKeyResolver(_keyManagementOptions.KeyPropagationWindow, _keyManagementOptions.MaxServerClockSkew, services);
+            EncryptorFactories = services.GetService<IEnumerable<IAuthenticatedEncryptorFactory>>();
         }
+
+        public IEnumerable<IAuthenticatedEncryptorFactory> EncryptorFactories { get; set; }
 
         private CacheableKeyRing CreateCacheableKeyRingCore(DateTimeOffset now, IKey keyJustAdded)
         {
@@ -99,7 +103,7 @@ namespace Microsoft.AspNetCore.DataProtection.KeyManagement
             Debug.Assert(defaultKey != null);
 
             // Invariant: our caller ensures that CreateEncryptorInstance succeeded at least once
-            Debug.Assert(defaultKey.CreateEncryptorInstance() != null);
+            Debug.Assert(CreateEncryptorForKey(defaultKey) != null);
 
             _logger?.UsingKeyAsDefaultKey(defaultKey.KeyId);
 
@@ -116,7 +120,22 @@ namespace Microsoft.AspNetCore.DataProtection.KeyManagement
                 expirationToken: cacheExpirationToken,
                 expirationTime: (defaultKey.ExpirationDate <= now) ? nextAutoRefreshTime : Min(defaultKey.ExpirationDate, nextAutoRefreshTime),
                 defaultKey: defaultKey,
-                allKeys: allKeys);
+                allKeys: allKeys,
+                encryptorFactories: EncryptorFactories);
+        }
+
+        private IAuthenticatedEncryptor CreateEncryptorForKey(IKey key)
+        {
+            foreach (var factory in EncryptorFactories)
+            {
+                var encryptor = factory.CreateEncryptorInstance(key);
+                if (encryptor != null)
+                {
+                    return encryptor;
+                }
+            }
+
+            return null;
         }
 
         public IKeyRing GetCurrentKeyRing()

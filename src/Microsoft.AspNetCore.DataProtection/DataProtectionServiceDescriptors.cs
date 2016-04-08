@@ -12,6 +12,7 @@ using Microsoft.AspNetCore.DataProtection.Repositories;
 using Microsoft.AspNetCore.DataProtection.XmlEncryption;
 using Microsoft.Extensions.Options;
 using Microsoft.Win32;
+using System.Collections.Generic;
 
 #if !NETSTANDARD1_3 // [[ISSUE60]] Remove this #ifdef when Core CLR gets support for EncryptedXml
 using System.Security.Cryptography.X509Certificates;
@@ -58,15 +59,30 @@ namespace Microsoft.Extensions.DependencyInjection
         /// </summary>
         public static ServiceDescriptor IAuthenticatedEncryptorConfiguration_Default()
         {
-            return IAuthenticatedEncryptorConfiguration_FromSettings(new AuthenticatedEncryptionSettings());
+            return IAuthenticatedEncryptorConfiguration_FromSettings(new AuthenticatedEncryptorConfiguration());
         }
 
         /// <summary>
-        /// An <see cref="IAuthenticatedEncryptorConfiguration"/> backed by an <see cref="IInternalAuthenticatedEncryptionSettings"/>.
+        /// An <see cref="IAuthenticatedEncryptorConfiguration"/> backed by an <see cref="IInternalAuthenticatedEncryptorConfiguration"/>.
         /// </summary>
-        public static ServiceDescriptor IAuthenticatedEncryptorConfiguration_FromSettings(IInternalAuthenticatedEncryptionSettings options)
+        public static ServiceDescriptor IAuthenticatedEncryptorConfiguration_FromSettings(IInternalAuthenticatedEncryptorConfiguration configuration)
         {
-            return ServiceDescriptor.Singleton<IAuthenticatedEncryptorConfiguration>(options.ToConfiguration);
+            return ServiceDescriptor.Singleton<IAuthenticatedEncryptorConfiguration>(configuration);
+        }
+
+        public static ServiceDescriptor IAuthenticatedEncryptorFactory_CngGcm()
+        {
+            return ServiceDescriptor.Singleton<IAuthenticatedEncryptorFactory, CngGcmAuthenticatedEncryptorFactory>();
+        }
+
+        public static ServiceDescriptor IAuthenticatedEncryptorFactory_CngCbc()
+        {
+            return ServiceDescriptor.Singleton<IAuthenticatedEncryptorFactory, CngCbcAuthenticatedEncryptorFactory>();
+        }
+
+        public static ServiceDescriptor IAuthenticatedEncryptorFactory_CngManaged()
+        {
+            return ServiceDescriptor.Singleton<IAuthenticatedEncryptorFactory, ManagedAuthenticatedEncryptorFactory>();
         }
 
 #if !NETSTANDARD1_3 // [[ISSUE60]] Remove this #ifdef when Core CLR gets support for EncryptedXml

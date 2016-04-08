@@ -8,6 +8,7 @@ using System.Linq;
 using System.Reflection;
 using Microsoft.AspNetCore.Cryptography;
 using Microsoft.AspNetCore.DataProtection.AuthenticatedEncryption;
+using Microsoft.AspNetCore.DataProtection.AuthenticatedEncryption.ConfigurationModel;
 using Microsoft.AspNetCore.DataProtection.KeyManagement;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Win32;
@@ -107,28 +108,28 @@ namespace Microsoft.AspNetCore.DataProtection
         private IEnumerable<ServiceDescriptor> ResolvePolicyCore()
         {
             // Read the encryption options type: CNG-CBC, CNG-GCM, Managed
-            IInternalAuthenticatedEncryptionSettings options = null;
+            IInternalAuthenticatedEncryptorConfiguration configuration = null;
             string encryptionType = (string)_policyRegKey.GetValue("EncryptionType");
             if (String.Equals(encryptionType, "CNG-CBC", StringComparison.OrdinalIgnoreCase))
             {
-                options = new CngCbcAuthenticatedEncryptionSettings();
+                configuration = new CngCbcAuthenticatedEncryptorConfiguration();
             }
             else if (String.Equals(encryptionType, "CNG-GCM", StringComparison.OrdinalIgnoreCase))
             {
-                options = new CngGcmAuthenticatedEncryptionSettings();
+                configuration = new CngGcmAuthenticatedEncryptorConfiguration();
             }
             else if (String.Equals(encryptionType, "Managed", StringComparison.OrdinalIgnoreCase))
             {
-                options = new ManagedAuthenticatedEncryptionSettings();
+                configuration = new ManagedAuthenticatedEncryptorConfiguration();
             }
             else if (!String.IsNullOrEmpty(encryptionType))
             {
                 throw CryptoUtil.Fail("Unrecognized EncryptionType: " + encryptionType);
             }
-            if (options != null)
+            if (configuration != null)
             {
-                PopulateOptions(options, _policyRegKey);
-                yield return DataProtectionServiceDescriptors.IAuthenticatedEncryptorConfiguration_FromSettings(options);
+                PopulateOptions(configuration, _policyRegKey);
+                yield return DataProtectionServiceDescriptors.IAuthenticatedEncryptorConfiguration_FromSettings(configuration);
             }
 
             // Read ancillary data

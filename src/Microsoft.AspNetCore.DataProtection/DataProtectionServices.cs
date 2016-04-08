@@ -136,6 +136,11 @@ namespace Microsoft.Extensions.DependencyInjection
             {
                 yield return DataProtectionServiceDescriptors.IAuthenticatedEncryptorConfiguration_Default();
             }
+
+            // Setup default AuthenticatedEncryptorFactories
+            yield return DataProtectionServiceDescriptors.IAuthenticatedEncryptorFactory_CngGcm();
+            yield return DataProtectionServiceDescriptors.IAuthenticatedEncryptorFactory_CngCbc();
+            yield return DataProtectionServiceDescriptors.IAuthenticatedEncryptorFactory_CngManaged();
         }
     }
 }
