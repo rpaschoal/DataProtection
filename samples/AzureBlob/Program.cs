@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.DataProtection;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.WindowsAzure.Storage;
+using Microsoft.AspNetCore.DataProtection.Azure.Blob;
 
 namespace AzureBlob
 {
@@ -25,8 +26,7 @@ namespace AzureBlob
             var serviceCollection = new ServiceCollection();
             serviceCollection.AddLogging();
             serviceCollection.AddDataProtection()
-                .PersistKeysToAzureBlobStorage(container, "keys.xml")
-                .SetDefaultKeyLifetime(TimeSpan.FromSeconds(1));
+                .PersistKeysToAzureBlobStorage(container, "keys.xml");
 
             var services = serviceCollection.BuildServiceProvider();
             var loggerFactory = services.GetService<ILoggerFactory>();

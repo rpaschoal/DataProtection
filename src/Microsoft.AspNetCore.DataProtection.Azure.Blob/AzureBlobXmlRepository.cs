@@ -15,7 +15,7 @@ using Microsoft.AspNetCore.DataProtection.Repositories;
 using Microsoft.WindowsAzure.Storage;
 using Microsoft.WindowsAzure.Storage.Blob;
 
-namespace Microsoft.AspNetCore.DataProtection.Azure
+namespace Microsoft.AspNetCore.DataProtection.Azure.Blob
 {
     /// <summary>
     /// An <see cref="IXmlRepository"/> which is backed by Azure Blob Storage.
@@ -25,11 +25,13 @@ namespace Microsoft.AspNetCore.DataProtection.Azure
     /// </remarks>
     public sealed class AzureBlobXmlRepository : IXmlRepository
     {
-        private static readonly TimeSpan ConflictBackoffPeriod = TimeSpan.FromMilliseconds(200);
         private const int ConflictMaxRetries = 5;
+        private static readonly TimeSpan ConflictBackoffPeriod = TimeSpan.FromMilliseconds(200);
+
         private static readonly XName RepositoryElementName = "repository";
 
         private readonly Func<ICloudBlob> _blobRefFactory;
+        private readonly Random _random;
         private BlobData _cachedBlobData;
 
         /// <summary>
@@ -46,16 +48,17 @@ namespace Microsoft.AspNetCore.DataProtection.Azure
             }
 
             _blobRefFactory = blobRefFactory;
+            _random = new Random();
         }
 
         public IReadOnlyCollection<XElement> GetAllElements()
         {
-            ICloudBlob blobRef = CreateFreshBlobRef();
+            var blobRef = CreateFreshBlobRef();
 
             // Shunt the work onto a ThreadPool thread so that it's independent of any
             // existing sync context or other potentially deadlock-causing items.
 
-            IList<XElement> elements = Task.Run(() => GetAllElementsAsync(blobRef)).GetAwaiter().GetResult();
+            var elements = Task.Run(() => GetAllElementsAsync(blobRef)).GetAwaiter().GetResult();
             return new ReadOnlyCollection<XElement>(elements);
         }
 
@@ -66,7 +69,7 @@ namespace Microsoft.AspNetCore.DataProtection.Azure
                 throw new ArgumentNullException(nameof(element));
             }
 
-            ICloudBlob blobRef = CreateFreshBlobRef();
+            var blobRef = CreateFreshBlobRef();
 
             // Shunt the work onto a ThreadPool thread so that it's independent of any
             // existing sync context or other potentially deadlock-causing items.
@@ -95,7 +98,7 @@ namespace Microsoft.AspNetCore.DataProtection.Azure
             // ICloudBlob instances aren't thread-safe, so we need to make sure we're working
             // with a fresh instance that won't be mutated by another thread.
 
-            ICloudBlob blobRef = _blobRefFactory();
+            var blobRef = _blobRefFactory();
             if (blobRef == null)
             {
                 throw new InvalidOperationException("The ICloudBlob factory method returned null.");
@@ -106,7 +109,7 @@ namespace Microsoft.AspNetCore.DataProtection.Azure
 
         private async Task<IList<XElement>> GetAllElementsAsync(ICloudBlob blobRef)
         {
-            BlobData data = await GetLatestDataAsync(blobRef);
+            var data = await GetLatestDataAsync(blobRef);
 
             if (data == null)
             {
@@ -124,7 +127,7 @@ namespace Microsoft.AspNetCore.DataProtection.Azure
             //
             // We want to return the first-level child elements to our caller.
 
-            XDocument doc = CreateDocumentFromBlob(data.BlobContents);
+            var doc = CreateDocumentFromBlob(data.BlobContents);
             return doc.Root.Elements().ToList();
         }
 
@@ -133,8 +136,8 @@ namespace Microsoft.AspNetCore.DataProtection.Azure
             // Set the appropriate AccessCondition based on what we believe the latest
             // file contents to be, then make the request.
 
-            BlobData latestCachedData = Volatile.Read(ref _cachedBlobData); // local ref so field isn't mutated under our feet
-            AccessCondition accessCondition = (latestCachedData != null)
+            var latestCachedData = Volatile.Read(ref _cachedBlobData); // local ref so field isn't mutated under our feet
+            var accessCondition = (latestCachedData != null)
                 ? AccessCondition.GenerateIfNoneMatchCondition(latestCachedData.ETag)
                 : null;
 
@@ -179,13 +182,12 @@ namespace Microsoft.AspNetCore.DataProtection.Azure
             return latestCachedData;
         }
 
-        private static TimeSpan GetRandomizedBackoffPeriod()
+        private int GetRandomizedBackoffPeriod()
         {
             // returns a TimeSpan in the range [0.8, 1.0) * ConflictBackoffPeriod
-
-            Random random = new Random(); // not used for crypto purposes
-            var multiplier = 0.8 + (random.NextDouble() * 0.2);
-            return TimeSpan.FromTicks((long)(multiplier * ConflictBackoffPeriod.Ticks));
+            // not used for crypto purposes
+            var multiplier = 0.8 + (_random.NextDouble() * 0.2);
+            return (int) (multiplier * ConflictBackoffPeriod.Ticks);
         }
 
         private async Task StoreElementAsync(ICloudBlob blobRef, XElement element)
@@ -193,7 +195,7 @@ namespace Microsoft.AspNetCore.DataProtection.Azure
             // holds the last error in case we need to rethrow it
             ExceptionDispatchInfo lastError = null;
 
-            for (int i = 0; i < ConflictMaxRetries; i++)
+            for (var i = 0; i < ConflictMaxRetries; i++)
             {
                 if (i > 1)
                 {
@@ -212,15 +214,15 @@ namespace Microsoft.AspNetCore.DataProtection.Azure
                 // Merge the new element into the document. If no document exists,
                 // create a new default document and inject this element into it.
 
-                BlobData latestData = Volatile.Read(ref _cachedBlobData);
-                XDocument doc = (latestData != null)
+                var latestData = Volatile.Read(ref _cachedBlobData);
+                var doc = (latestData != null)
                     ? CreateDocumentFromBlob(latestData.BlobContents)
                     : new XDocument(new XElement(RepositoryElementName));
                 doc.Root.Add(element);
 
                 // Turn this document back into a byte[].
 
-                MemoryStream serializedDoc = new MemoryStream();
+                var serializedDoc = new MemoryStream();
                 doc.Save(serializedDoc, SaveOptions.DisableFormatting);
 
                 // Generate the appropriate precondition header based on whether or not
@@ -241,7 +243,7 @@ namespace Microsoft.AspNetCore.DataProtection.Azure
                 {
                     // Send the request up to the server.
 
-                    byte[] serializedDocAsByteArray = serializedDoc.ToArray();
+                    var serializedDocAsByteArray = serializedDoc.ToArray();
 
                     await blobRef.UploadFromByteArrayAsync(
                         buffer: serializedDocAsByteArray,

@@ -1,12 +1,16 @@
-﻿using System.IO;
+﻿// Copyright (c) .NET Foundation. All rights reserved.
+// Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
+
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Linq;
-using Xunit;
+using Microsoft.AspNetCore.DataProtection.Azure.Blob;
 using Microsoft.WindowsAzure.Storage;
 using Microsoft.WindowsAzure.Storage.Blob;
 using Moq;
+using Xunit;
 
 namespace Microsoft.AspNetCore.DataProtection.Azure.Test
 {
@@ -45,11 +49,6 @@ namespace Microsoft.AspNetCore.DataProtection.Azure.Test
             var element = "<Element />";
 
             Assert.Equal(bytes, GetEnvelopedContent(element));
-        }
-
-        private static byte[] GetEnvelopedContent(string element)
-        {
-            return Encoding.UTF8.GetBytes($"﻿<?xml version=\"1.0\" encoding=\"utf-8\"?><repository>{element}</repository>");
         }
 
         [Fact]
@@ -102,7 +101,12 @@ namespace Microsoft.AspNetCore.DataProtection.Azure.Test
 
             mock.Verify();
             Assert.Null(downloadCondition);
-            Assert.Equal(bytes, Encoding.UTF8.GetBytes("﻿<?xml version=\"1.0\" encoding=\"utf-8\"?><repository><Element1 /><Element2 /></repository>"));
+            Assert.Equal(bytes, GetEnvelopedContent("<Element1 /><Element2 />"));
+        }
+
+        private static byte[] GetEnvelopedContent(string element)
+        {
+            return Encoding.UTF8.GetBytes($"﻿<?xml version=\"1.0\" encoding=\"utf-8\"?><repository>{element}</repository>");
         }
     }
 }

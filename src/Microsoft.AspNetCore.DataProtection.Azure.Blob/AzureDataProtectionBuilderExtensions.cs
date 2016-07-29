@@ -2,14 +2,13 @@
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
 using System;
-using Microsoft.AspNetCore.DataProtection;
-using Microsoft.AspNetCore.DataProtection.Azure;
 using Microsoft.AspNetCore.DataProtection.Repositories;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.WindowsAzure.Storage;
 using Microsoft.WindowsAzure.Storage.Auth;
 using Microsoft.WindowsAzure.Storage.Blob;
 
-namespace Microsoft.Extensions.DependencyInjection
+namespace Microsoft.AspNetCore.DataProtection.Azure.Blob
 {
     /// <summary>
     /// Contains Azure-specific extension methods for modifying a
@@ -48,15 +47,15 @@ namespace Microsoft.Extensions.DependencyInjection
             // Simply concatenate the root storage endpoint with the relative path,
             // which includes the container name and blob name.
 
-            UriBuilder uriBuilder = new UriBuilder(storageAccount.BlobEndpoint);
+            var uriBuilder = new UriBuilder(storageAccount.BlobEndpoint);
             uriBuilder.Path = uriBuilder.Path.TrimEnd('/') + "/" + relativePath.TrimStart('/');
 
             // We can create a CloudBlockBlob from the storage URI and the creds.
 
-            Uri blobAbsoluteUri = uriBuilder.Uri;
+            var blobAbsoluteUri = uriBuilder.Uri;
             var credentials = storageAccount.Credentials;
 
-            return PersistKeystoAzureBlobStorageCore(builder, () => new CloudBlockBlob(blobAbsoluteUri, credentials));
+            return PersistKeystoAzureBlobStorageInternal(builder, () => new CloudBlockBlob(blobAbsoluteUri, credentials));
         }
 
         /// <summary>
@@ -81,7 +80,7 @@ namespace Microsoft.Extensions.DependencyInjection
                 throw new ArgumentNullException(nameof(blobUri));
             }
 
-            UriBuilder uriBuilder = new UriBuilder(blobUri);
+            var uriBuilder = new UriBuilder(blobUri);
 
             // The SAS token is present in the query string.
 
@@ -94,9 +93,9 @@ namespace Microsoft.Extensions.DependencyInjection
 
             var credentials = new StorageCredentials(uriBuilder.Query);
             uriBuilder.Query = null; // no longer needed
-            Uri blobAbsoluteUri = uriBuilder.Uri;
+            var blobAbsoluteUri = uriBuilder.Uri;
 
-            return PersistKeystoAzureBlobStorageCore(builder, () => new CloudBlockBlob(blobAbsoluteUri, credentials));
+            return PersistKeystoAzureBlobStorageInternal(builder, () => new CloudBlockBlob(blobAbsoluteUri, credentials));
         }
 
         /// <summary>
@@ -127,9 +126,9 @@ namespace Microsoft.Extensions.DependencyInjection
             // like retry policy and secondary connection URIs.
 
             var container = blobReference.Container;
-            string blobName = blobReference.Name;
+            var blobName = blobReference.Name;
 
-            return PersistKeystoAzureBlobStorageCore(builder, () => container.GetBlockBlobReference(blobName));
+            return PersistKeystoAzureBlobStorageInternal(builder, () => container.GetBlockBlobReference(blobName));
         }
 
         /// <summary>
@@ -159,11 +158,11 @@ namespace Microsoft.Extensions.DependencyInjection
             {
                 throw new ArgumentNullException(nameof(blobName));
             }
-            return PersistKeystoAzureBlobStorageCore(builder, () => container.GetBlockBlobReference(blobName));
+            return PersistKeystoAzureBlobStorageInternal(builder, () => container.GetBlockBlobReference(blobName));
         }
 
         // important: the Func passed into this method must return a new instance with each call
-        private static IDataProtectionBuilder PersistKeystoAzureBlobStorageCore(IDataProtectionBuilder config, Func<CloudBlockBlob> blobRefFactory)
+        private static IDataProtectionBuilder PersistKeystoAzureBlobStorageInternal(IDataProtectionBuilder config, Func<CloudBlockBlob> blobRefFactory)
         {
             config.Services.AddSingleton<IXmlRepository>(services => new AzureBlobXmlRepository(blobRefFactory));
             return config;

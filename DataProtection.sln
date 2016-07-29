@@ -44,7 +44,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		NuGet.config = NuGet.config
 	EndProjectSection
 EndProject
-Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "Microsoft.AspNetCore.DataProtection.Azure.Blob.Test", "test\Microsoft.AspNetCore.DataProtection.Azure.Test\Microsoft.AspNetCore.DataProtection.Azure.Blob.Test.xproj", "{8C41240E-48F8-402F-9388-74CFE27F4D76}"
+Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "Microsoft.AspNetCore.DataProtection.Azure.Blob.Test", "test\Microsoft.AspNetCore.DataProtection.Azure.Blob.Test\Microsoft.AspNetCore.DataProtection.Azure.Blob.Test.xproj", "{8C41240E-48F8-402F-9388-74CFE27F4D76}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
