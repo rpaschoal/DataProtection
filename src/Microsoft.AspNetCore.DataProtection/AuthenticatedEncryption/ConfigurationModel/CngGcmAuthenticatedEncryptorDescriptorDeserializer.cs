@@ -8,15 +8,14 @@ namespace Microsoft.AspNetCore.DataProtection.AuthenticatedEncryption.Configurat
 {
     /// <summary>
     /// A class that can deserialize an <see cref="XElement"/> that represents the serialized version
-    /// of an <see cref="CngGcmAuthenticatedEncryptorDescriptor"/>.
+    /// of an <see cref="CngGcmAuthenticatedEncryptorConfiguration"/>.
     /// </summary>
     public sealed class CngGcmAuthenticatedEncryptorDescriptorDeserializer : IAuthenticatedEncryptorDescriptorDeserializer
     {
-
         /// <summary>
-        /// Imports the <see cref="CngCbcAuthenticatedEncryptorDescriptor"/> from serialized XML.
+        /// Imports the <see cref="CngGcmAuthenticatedEncryptorConfiguration"/> from serialized XML.
         /// </summary>
-        public IAuthenticatedEncryptorDescriptor ImportFromXml(XElement element)
+        public AlgorithmConfiguration ImportFromXml(XElement element)
         {
             if (element == null)
             {
@@ -29,16 +28,16 @@ namespace Microsoft.AspNetCore.DataProtection.AuthenticatedEncryption.Configurat
             //   <masterKey>...</masterKey>
             // </descriptor>
 
-            var settings = new CngGcmAuthenticatedEncryptorConfiguration();
+            var configuration = new CngGcmAuthenticatedEncryptorConfiguration();
 
             var encryptionElement = element.Element("encryption");
-            settings.EncryptionAlgorithm = (string)encryptionElement.Attribute("algorithm");
-            settings.EncryptionAlgorithmKeySize = (int)encryptionElement.Attribute("keyLength");
-            settings.EncryptionAlgorithmProvider = (string)encryptionElement.Attribute("provider"); // could be null
+            configuration.EncryptionAlgorithm = (string)encryptionElement.Attribute("algorithm");
+            configuration.EncryptionAlgorithmKeySize = (int)encryptionElement.Attribute("keyLength");
+            configuration.EncryptionAlgorithmProvider = (string)encryptionElement.Attribute("provider"); // could be null
 
-            Secret masterKey = ((string)element.Element("masterKey")).ToSecret();
+            configuration.MasterKey = ((string)element.Element("masterKey")).ToSecret();
 
-            return new CngGcmAuthenticatedEncryptorDescriptor(settings, masterKey);
+            return configuration;
         }
     }
 }

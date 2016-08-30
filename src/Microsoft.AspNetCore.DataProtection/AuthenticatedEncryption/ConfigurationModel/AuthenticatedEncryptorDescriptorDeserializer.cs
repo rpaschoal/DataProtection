@@ -9,14 +9,14 @@ namespace Microsoft.AspNetCore.DataProtection.AuthenticatedEncryption.Configurat
 {
     /// <summary>
     /// A class that can deserialize an <see cref="XElement"/> that represents the serialized version
-    /// of an <see cref="AuthenticatedEncryptorDescriptor"/>.
+    /// of an <see cref="AuthenticatedEncryptorConfiguration"/>.
     /// </summary>
     public sealed class AuthenticatedEncryptorDescriptorDeserializer : IAuthenticatedEncryptorDescriptorDeserializer
     {
         /// <summary>
-        /// Imports the <see cref="AuthenticatedEncryptorDescriptor"/> from serialized XML.
+        /// Imports the <see cref="AuthenticatedEncryptorConfiguration"/> from serialized XML.
         /// </summary>
-        public IAuthenticatedEncryptorDescriptor ImportFromXml(XElement element)
+        public AlgorithmConfiguration ImportFromXml(XElement element)
         {
             if (element == null)
             {
@@ -29,20 +29,20 @@ namespace Microsoft.AspNetCore.DataProtection.AuthenticatedEncryption.Configurat
             //   <masterKey requiresEncryption="true">...</masterKey>
             // </descriptor>
 
-            var settings = new AuthenticatedEncryptorConfiguration();
+            var configuration = new AuthenticatedEncryptorConfiguration();
 
             var encryptionElement = element.Element("encryption");
-            settings.EncryptionAlgorithm = (EncryptionAlgorithm)Enum.Parse(typeof(EncryptionAlgorithm), (string)encryptionElement.Attribute("algorithm"));
+            configuration.EncryptionAlgorithm = (EncryptionAlgorithm)Enum.Parse(typeof(EncryptionAlgorithm), (string)encryptionElement.Attribute("algorithm"));
 
             // only read <validation> if not GCM
-            if (!settings.IsGcmAlgorithm())
+            if (!configuration.IsGcmAlgorithm())
             {
                 var validationElement = element.Element("validation");
-                settings.ValidationAlgorithm = (ValidationAlgorithm)Enum.Parse(typeof(ValidationAlgorithm), (string)validationElement.Attribute("algorithm"));
+                configuration.ValidationAlgorithm = (ValidationAlgorithm)Enum.Parse(typeof(ValidationAlgorithm), (string)validationElement.Attribute("algorithm"));
             }
 
-            Secret masterKey = ((string)element.Elements("masterKey").Single()).ToSecret();
-            return new AuthenticatedEncryptorDescriptor(settings, masterKey);
+            configuration.MasterKey = ((string)element.Elements("masterKey").Single()).ToSecret();
+            return configuration;
         }
     }
 }

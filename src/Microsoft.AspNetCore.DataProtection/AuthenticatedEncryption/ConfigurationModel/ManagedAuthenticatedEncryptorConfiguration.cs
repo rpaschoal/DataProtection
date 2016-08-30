@@ -3,6 +3,7 @@
 
 using System;
 using System.Security.Cryptography;
+using System.Xml.Linq;
 
 namespace Microsoft.AspNetCore.DataProtection.AuthenticatedEncryption.ConfigurationModel
 {
@@ -48,14 +49,38 @@ namespace Microsoft.AspNetCore.DataProtection.AuthenticatedEncryption.Configurat
         [ApplyPolicy]
         public Type ValidationAlgorithmType { get; set; } = typeof(HMACSHA256);
 
-        public override IAuthenticatedEncryptorDescriptor CreateNewDescriptor()
+        internal override ISecret MasterKey { get; set; }
+
+        public override XmlSerializedDescriptorInfo ExportToXml()
         {
-            return CreateDescriptorFromSecret(Secret.Random(KDK_SIZE_IN_BYTES));
+            return ExportToXml(Secret.Random(KDK_SIZE_IN_BYTES));
         }
 
-        internal override IAuthenticatedEncryptorDescriptor CreateDescriptorFromSecret(ISecret secret)
+        internal override XmlSerializedDescriptorInfo ExportToXml(ISecret masterKey)
         {
-            return new ManagedAuthenticatedEncryptorDescriptor(this, secret);
+            MasterKey = masterKey;
+
+            // <descriptor>
+            //   <!-- managed implementations -->
+            //   <encryption algorithm="..." keyLength="..." />
+            //   <validation algorithm="..." />
+            //   <masterKey>...</masterKey>
+            // </descriptor>
+
+            var encryptionElement = new XElement("encryption",
+                new XAttribute("algorithm", TypeToFriendlyName(EncryptionAlgorithmType)),
+                new XAttribute("keyLength", EncryptionAlgorithmKeySize));
+
+            var validationElement = new XElement("validation",
+                new XAttribute("algorithm", TypeToFriendlyName(ValidationAlgorithmType)));
+
+            var rootElement = new XElement("descriptor",
+                new XComment(" Algorithms provided by specified SymmetricAlgorithm and KeyedHashAlgorithm "),
+                encryptionElement,
+                validationElement,
+                masterKey.ToMasterKeyElement());
+
+            return new XmlSerializedDescriptorInfo(rootElement, typeof(ManagedAuthenticatedEncryptorDescriptorDeserializer));
         }
 
         /// <summary>

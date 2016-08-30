@@ -44,6 +44,6 @@ namespace Microsoft.AspNetCore.DataProtection.KeyManagement
         /// </summary>
         Guid KeyId { get; }
 
-        IAuthenticatedEncryptorDescriptor Descriptor { get; }
+        AlgorithmConfiguration Configuration { get; }
     }
 }

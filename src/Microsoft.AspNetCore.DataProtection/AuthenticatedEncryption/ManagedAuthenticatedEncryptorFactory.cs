@@ -8,7 +8,6 @@ using Microsoft.AspNetCore.DataProtection.AuthenticatedEncryption.ConfigurationM
 using Microsoft.AspNetCore.DataProtection.KeyManagement;
 using Microsoft.AspNetCore.DataProtection.Managed;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 
 namespace Microsoft.AspNetCore.DataProtection.AuthenticatedEncryption
 {
@@ -25,13 +24,13 @@ namespace Microsoft.AspNetCore.DataProtection.AuthenticatedEncryption
 
         public IAuthenticatedEncryptor CreateEncryptorInstance(IKey key)
         {
-            var descriptor = key.Descriptor as ManagedAuthenticatedEncryptorDescriptor;
-            if (descriptor == null)
+            var configuration = key.Configuration as ManagedAuthenticatedEncryptorConfiguration;
+            if (configuration == null)
             {
                 return null;
             }
 
-            return CreateAuthenticatedEncryptorInstance(descriptor.MasterKey);
+            return CreateAuthenticatedEncryptorInstance(configuration.MasterKey);
         }
 
         internal ManagedAuthenticatedEncryptor CreateAuthenticatedEncryptorInstance(ISecret secret)

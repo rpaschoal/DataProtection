@@ -25,13 +25,13 @@ namespace Microsoft.AspNetCore.DataProtection.AuthenticatedEncryption
 
         public IAuthenticatedEncryptor CreateEncryptorInstance(IKey key)
         {
-            var descriptor = key.Descriptor as CngGcmAuthenticatedEncryptorDescriptor;
-            if (descriptor == null)
+            var configuration = key.Configuration as CngGcmAuthenticatedEncryptorConfiguration;
+            if (configuration == null)
             {
                 return null;
             }
 
-            return CreateAuthenticatedEncryptorInstance(descriptor.MasterKey);
+            return CreateAuthenticatedEncryptorInstance(configuration.MasterKey);
         }
 
         internal GcmAuthenticatedEncryptor CreateAuthenticatedEncryptorInstance(ISecret secret)

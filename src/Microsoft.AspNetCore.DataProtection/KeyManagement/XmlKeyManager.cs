@@ -41,7 +41,7 @@ namespace Microsoft.AspNetCore.DataProtection.KeyManagement
         private const string RevokeAllKeysValue = "*";
 
         private readonly IActivator _activator;
-        private readonly AlgorithmConfiguration _authenticatedEncryptorConfiguration;
+        private readonly AlgorithmConfiguration _algorithmConfiguration;
         private readonly IKeyEscrowSink _keyEscrowSink;
         private readonly ILogger _logger;
 
@@ -52,7 +52,7 @@ namespace Microsoft.AspNetCore.DataProtection.KeyManagement
             // TODO: Handle repository/encryptor special logic
             KeyRepository = keyManagementOptions.Value.XmlRepository;
             KeyEncryptor = keyManagementOptions.Value.XmlEncryptor;
-            _authenticatedEncryptorConfiguration = keyManagementOptions.Value.AuthenticatedEncryptorConfiguration;
+            _algorithmConfiguration = keyManagementOptions.Value.AuthenticatedEncryptorConfiguration;
 
             var escrowSinks = keyManagementOptions.Value.KeyEscrowSinks;
             _keyEscrowSink = escrowSinks.Count > 0 ? new AggregateKeyEscrowSink(escrowSinks) : null;
@@ -314,9 +314,7 @@ namespace Microsoft.AspNetCore.DataProtection.KeyManagement
 
             _logger?.CreatingKey(keyId, creationDate, activationDate, expirationDate);
 
-            var newDescriptor = _authenticatedEncryptorConfiguration.CreateNewDescriptor()
-                ?? CryptoUtil.Fail<IAuthenticatedEncryptorDescriptor>("CreateNewDescriptor returned null.");
-            var descriptorXmlInfo = newDescriptor.ExportToXml();
+            var descriptorXmlInfo = _algorithmConfiguration.ExportToXml();
 
             _logger?.DescriptorDeserializerTypeForKeyIs(keyId, descriptorXmlInfo.DeserializerType.AssemblyQualifiedName);
 
@@ -360,10 +358,10 @@ namespace Microsoft.AspNetCore.DataProtection.KeyManagement
                 creationDate: creationDate,
                 activationDate: activationDate,
                 expirationDate: expirationDate,
-                descriptor: newDescriptor);
+                configuration: _algorithmConfiguration);
         }
 
-        internal IAuthenticatedEncryptorDescriptor DeserializeDescriptorFromKeyElement(XElement keyElement)
+        internal AlgorithmConfiguration DeserializeConfigurationFromKeyElement(XElement keyElement)
         {
             try
             {
@@ -374,9 +372,9 @@ namespace Microsoft.AspNetCore.DataProtection.KeyManagement
                 // Decrypt the descriptor element and pass it to the descriptor for consumption
                 var unencryptedInputToDeserializer = descriptorElement.Elements().Single().DecryptElement(_activator);
                 var deserializerInstance = _activator.CreateInstance<IAuthenticatedEncryptorDescriptorDeserializer>(descriptorDeserializerTypeName);
-                var descriptorInstance = deserializerInstance.ImportFromXml(unencryptedInputToDeserializer);
+                var configurationInstance = deserializerInstance.ImportFromXml(unencryptedInputToDeserializer);
 
-                return descriptorInstance ?? CryptoUtil.Fail<IAuthenticatedEncryptorDescriptor>("ImportFromXml returned null.");
+                return configurationInstance ?? CryptoUtil.Fail<AlgorithmConfiguration>("ImportFromXml returned null.");
             }
             catch (Exception ex)
             {

@@ -9,6 +9,8 @@ namespace Microsoft.AspNetCore.DataProtection.AuthenticatedEncryption.Configurat
     {
         internal const int KDK_SIZE_IN_BYTES = 512 / 8;
 
+        internal abstract ISecret MasterKey { get; set; }
+
         /// <summary>
         /// Exports the current descriptor to XML.
         /// </summary>
@@ -22,9 +24,9 @@ namespace Microsoft.AspNetCore.DataProtection.AuthenticatedEncryption.Configurat
         /// extension method, and the caller should encrypt the element before persisting
         /// the XML to storage.
         /// </remarks>
-        public abstract IAuthenticatedEncryptorDescriptor CreateNewDescriptor();
+        public abstract XmlSerializedDescriptorInfo ExportToXml();
 
-        internal abstract IAuthenticatedEncryptorDescriptor CreateDescriptorFromSecret(ISecret secret);
+        internal abstract XmlSerializedDescriptorInfo ExportToXml(ISecret secret);
 
         /// <summary>
         /// Performs a self-test of the algorithm specified by the configuration object.

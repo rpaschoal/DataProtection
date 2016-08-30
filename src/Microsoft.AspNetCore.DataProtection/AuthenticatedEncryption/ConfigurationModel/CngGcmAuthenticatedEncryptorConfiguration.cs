@@ -1,6 +1,7 @@
 // Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
+using System.Xml.Linq;
 using Microsoft.AspNetCore.Cryptography;
 
 namespace Microsoft.AspNetCore.DataProtection.AuthenticatedEncryption.ConfigurationModel
@@ -46,14 +47,37 @@ namespace Microsoft.AspNetCore.DataProtection.AuthenticatedEncryption.Configurat
         [ApplyPolicy]
         public int EncryptionAlgorithmKeySize { get; set; } = 256;
 
-        public override IAuthenticatedEncryptorDescriptor CreateNewDescriptor()
+        internal override ISecret MasterKey { get; set; }
+
+        public override XmlSerializedDescriptorInfo ExportToXml()
         {
-            return CreateDescriptorFromSecret(Secret.Random(KDK_SIZE_IN_BYTES));
+            return ExportToXml(Secret.Random(KDK_SIZE_IN_BYTES));
         }
 
-        internal override IAuthenticatedEncryptorDescriptor CreateDescriptorFromSecret(ISecret secret)
+        internal override XmlSerializedDescriptorInfo ExportToXml(ISecret masterKey)
         {
-            return new CngGcmAuthenticatedEncryptorDescriptor(this, secret);
+            MasterKey = masterKey;
+
+            // <descriptor>
+            //   <!-- Windows CNG-GCM -->
+            //   <encryption algorithm="..." keyLength="..." [provider="..."] />
+            //   <masterKey>...</masterKey>
+            // </descriptor>
+
+            var encryptionElement = new XElement("encryption",
+                new XAttribute("algorithm", EncryptionAlgorithm),
+                new XAttribute("keyLength", EncryptionAlgorithmKeySize));
+            if (EncryptionAlgorithmProvider != null)
+            {
+                encryptionElement.SetAttributeValue("provider", EncryptionAlgorithmProvider);
+            }
+
+            var rootElement = new XElement("descriptor",
+                new XComment(" Algorithms provided by Windows CNG, using Galois/Counter Mode encryption and validation "),
+                encryptionElement,
+                masterKey.ToMasterKeyElement());
+
+            return new XmlSerializedDescriptorInfo(rootElement, typeof(CngGcmAuthenticatedEncryptorDescriptorDeserializer));
         }
 
         /// <summary>

@@ -25,13 +25,13 @@ namespace Microsoft.AspNetCore.DataProtection.AuthenticatedEncryption
 
         public IAuthenticatedEncryptor CreateEncryptorInstance(IKey key)
         {
-            var descriptor = key.Descriptor as CngCbcAuthenticatedEncryptorDescriptor;
-            if (descriptor == null)
+            var configuration = key.Configuration as CngCbcAuthenticatedEncryptorConfiguration;
+            if (configuration == null)
             {
                 return null;
             }
 
-            return CreateAuthenticatedEncryptorInstance(descriptor.MasterKey);
+            return CreateAuthenticatedEncryptorInstance(configuration.MasterKey);
         }
 
         internal CbcAuthenticatedEncryptor CreateAuthenticatedEncryptorInstance(ISecret secret)

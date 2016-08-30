@@ -9,14 +9,14 @@ namespace Microsoft.AspNetCore.DataProtection.AuthenticatedEncryption.Configurat
 {
     /// <summary>
     /// A class that can deserialize an <see cref="XElement"/> that represents the serialized version
-    /// of an <see cref="ManagedAuthenticatedEncryptorDescriptor"/>.
+    /// of an <see cref="ManagedAuthenticatedEncryptorConfiguration"/>.
     /// </summary>
     public sealed class ManagedAuthenticatedEncryptorDescriptorDeserializer : IAuthenticatedEncryptorDescriptorDeserializer
     {
         /// <summary>
-        /// Imports the <see cref="ManagedAuthenticatedEncryptorDescriptor"/> from serialized XML.
+        /// Imports the <see cref="ManagedAuthenticatedEncryptorConfiguration"/> from serialized XML.
         /// </summary>
-        public IAuthenticatedEncryptorDescriptor ImportFromXml(XElement element)
+        public AlgorithmConfiguration ImportFromXml(XElement element)
         {
             if (element == null)
             {
@@ -30,18 +30,18 @@ namespace Microsoft.AspNetCore.DataProtection.AuthenticatedEncryption.Configurat
             //   <masterKey>...</masterKey>
             // </descriptor>
 
-            var settings = new ManagedAuthenticatedEncryptorConfiguration();
+            var configuration = new ManagedAuthenticatedEncryptorConfiguration();
 
             var encryptionElement = element.Element("encryption");
-            settings.EncryptionAlgorithmType = FriendlyNameToType((string)encryptionElement.Attribute("algorithm"));
-            settings.EncryptionAlgorithmKeySize = (int)encryptionElement.Attribute("keyLength");
+            configuration.EncryptionAlgorithmType = FriendlyNameToType((string)encryptionElement.Attribute("algorithm"));
+            configuration.EncryptionAlgorithmKeySize = (int)encryptionElement.Attribute("keyLength");
 
             var validationElement = element.Element("validation");
-            settings.ValidationAlgorithmType = FriendlyNameToType((string)validationElement.Attribute("algorithm"));
+            configuration.ValidationAlgorithmType = FriendlyNameToType((string)validationElement.Attribute("algorithm"));
 
-            Secret masterKey = ((string)element.Element("masterKey")).ToSecret();
+            configuration.MasterKey = ((string)element.Element("masterKey")).ToSecret();
 
-            return new ManagedAuthenticatedEncryptorDescriptor(settings, masterKey);
+            return configuration;
         }
 
         // Any changes to this method should also be be reflected

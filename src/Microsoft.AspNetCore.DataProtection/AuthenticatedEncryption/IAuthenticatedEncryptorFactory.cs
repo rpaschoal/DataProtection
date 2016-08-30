@@ -9,11 +9,11 @@ namespace Microsoft.AspNetCore.DataProtection.AuthenticatedEncryption
     public interface IAuthenticatedEncryptorFactory
     {
         /// <summary>
-        /// Creates an <see cref="IAuthenticatedEncryptor"/> instance based on the given <see cref="IKey.Descriptor"/>.
+        /// Creates an <see cref="IAuthenticatedEncryptor"/> instance based on the given <see cref="IKey.Configuration"/>.
         /// </summary>
         /// <returns>An <see cref="IAuthenticatedEncryptor"/> instance.</returns>
         /// <remarks>
-        /// For a given <see cref="IKey.Descriptor"/>, any two instances returned by this method should
+        /// For a given <see cref="IKey.Configuration"/>, any two instances returned by this method should
         /// be considered equivalent, e.g., the payload returned by one's <see cref="IAuthenticatedEncryptor.Encrypt(ArraySegment{byte}, ArraySegment{byte})"/>
         /// method should be consumable by the other's <see cref="IAuthenticatedEncryptor.Decrypt(ArraySegment{byte}, ArraySegment{byte})"/> method.
         /// </remarks>

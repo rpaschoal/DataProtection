@@ -15,7 +15,7 @@ namespace Microsoft.AspNetCore.DataProtection.AuthenticatedEncryption.Configurat
 
         /// <summary>
         /// Marks the provided <see cref="XElement"/> as requiring encryption before being persisted
-        /// to storage. Use when implementing <see cref="IAuthenticatedEncryptorDescriptor.ExportToXml"/>.
+        /// to storage. Use when implementing <see cref="AlgorithmConfiguration.ExportToXml()"/>.
         /// </summary>
         public static void MarkAsRequiresEncryption(this XElement element)
         {

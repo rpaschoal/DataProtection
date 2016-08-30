@@ -12,15 +12,15 @@ namespace Microsoft.AspNetCore.DataProtection.KeyManagement
     /// </summary>
     internal abstract class KeyBase : IKey
     {
-        private readonly Lazy<IAuthenticatedEncryptorDescriptor> _lazyDescriptor;
+        private readonly Lazy<AlgorithmConfiguration> _lazyConfiguration;
 
-        public KeyBase(Guid keyId, DateTimeOffset creationDate, DateTimeOffset activationDate, DateTimeOffset expirationDate, Lazy<IAuthenticatedEncryptorDescriptor> lazyDescriptor)
+        public KeyBase(Guid keyId, DateTimeOffset creationDate, DateTimeOffset activationDate, DateTimeOffset expirationDate, Lazy<AlgorithmConfiguration> lazyConfiguration)
         {
             KeyId = keyId;
             CreationDate = creationDate;
             ActivationDate = activationDate;
             ExpirationDate = expirationDate;
-            _lazyDescriptor = lazyDescriptor;
+            _lazyConfiguration = lazyConfiguration;
         }
 
         public DateTimeOffset ActivationDate { get; }
@@ -33,11 +33,11 @@ namespace Microsoft.AspNetCore.DataProtection.KeyManagement
 
         public Guid KeyId { get; }
 
-        public IAuthenticatedEncryptorDescriptor Descriptor
+        public AlgorithmConfiguration Configuration
         {
             get
             {
-                return _lazyDescriptor.Value;
+                return _lazyConfiguration.Value;
             }
         }
 

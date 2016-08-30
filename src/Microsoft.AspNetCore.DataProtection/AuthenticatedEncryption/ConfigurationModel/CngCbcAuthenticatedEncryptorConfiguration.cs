@@ -1,6 +1,7 @@
 // Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
+using System.Xml.Linq;
 using Microsoft.AspNetCore.Cryptography;
 
 namespace Microsoft.AspNetCore.DataProtection.AuthenticatedEncryption.ConfigurationModel
@@ -70,14 +71,46 @@ namespace Microsoft.AspNetCore.DataProtection.AuthenticatedEncryption.Configurat
         [ApplyPolicy]
         public string HashAlgorithmProvider { get; set; } = null;
 
-        public override IAuthenticatedEncryptorDescriptor CreateNewDescriptor()
+        internal override ISecret MasterKey { get; set; }
+
+        public override XmlSerializedDescriptorInfo ExportToXml()
         {
-            return CreateDescriptorFromSecret(Secret.Random(KDK_SIZE_IN_BYTES));
+            return ExportToXml(Secret.Random(KDK_SIZE_IN_BYTES));
         }
 
-        internal override IAuthenticatedEncryptorDescriptor CreateDescriptorFromSecret(ISecret secret)
+        internal override XmlSerializedDescriptorInfo ExportToXml(ISecret masterKey)
         {
-            return new CngCbcAuthenticatedEncryptorDescriptor(this, secret);
+            MasterKey = masterKey;
+
+            // <descriptor>
+            //   <!-- Windows CNG-CBC -->
+            //   <encryption algorithm="..." keyLength="..." [provider="..."] />
+            //   <hash algorithm="..." [provider="..."] />
+            //   <masterKey>...</masterKey>
+            // </descriptor>
+
+            var encryptionElement = new XElement("encryption",
+                new XAttribute("algorithm", EncryptionAlgorithm),
+                new XAttribute("keyLength", EncryptionAlgorithmKeySize));
+            if (EncryptionAlgorithmProvider != null)
+            {
+                encryptionElement.SetAttributeValue("provider", EncryptionAlgorithmProvider);
+            }
+
+            var hashElement = new XElement("hash",
+                new XAttribute("algorithm", HashAlgorithm));
+            if (HashAlgorithmProvider != null)
+            {
+                hashElement.SetAttributeValue("provider", HashAlgorithmProvider);
+            }
+
+            var rootElement = new XElement("descriptor",
+                new XComment(" Algorithms provided by Windows CNG, using CBC-mode encryption with HMAC validation "),
+                encryptionElement,
+                hashElement,
+                masterKey.ToMasterKeyElement());
+
+            return new XmlSerializedDescriptorInfo(rootElement, typeof(CngCbcAuthenticatedEncryptorDescriptorDeserializer));
         }
 
         /// <summary>

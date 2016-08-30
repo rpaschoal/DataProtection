@@ -4,6 +4,7 @@
 using System;
 using System.Security.Cryptography;
 using Microsoft.AspNetCore.Cryptography;
+using System.Xml.Linq;
 using Microsoft.AspNetCore.Cryptography.Cng;
 
 namespace Microsoft.AspNetCore.DataProtection.AuthenticatedEncryption.ConfigurationModel
@@ -30,14 +31,37 @@ namespace Microsoft.AspNetCore.DataProtection.AuthenticatedEncryption.Configurat
         /// </remarks>
         public ValidationAlgorithm ValidationAlgorithm { get; set; } = ValidationAlgorithm.HMACSHA256;
 
-        public override IAuthenticatedEncryptorDescriptor CreateNewDescriptor()
+        internal override ISecret MasterKey { get; set; }
+
+        public override XmlSerializedDescriptorInfo ExportToXml()
         {
-            return CreateDescriptorFromSecret(Secret.Random(KDK_SIZE_IN_BYTES));
+            return ExportToXml(Secret.Random(KDK_SIZE_IN_BYTES));
         }
 
-        internal override IAuthenticatedEncryptorDescriptor CreateDescriptorFromSecret(ISecret secret)
+        internal override XmlSerializedDescriptorInfo ExportToXml(ISecret masterKey)
         {
-            return new AuthenticatedEncryptorDescriptor(this, secret);
+            MasterKey = masterKey;
+
+            // <descriptor>
+            //   <encryption algorithm="..." />
+            //   <validation algorithm="..." /> <!-- only if not GCM -->
+            //   <masterKey requiresEncryption="true">...</masterKey>
+            // </descriptor>
+
+            var encryptionElement = new XElement("encryption",
+                new XAttribute("algorithm", EncryptionAlgorithm));
+
+            var validationElement = (this.IsGcmAlgorithm())
+                ? (object)new XComment(" AES-GCM includes a 128-bit authentication tag, no extra validation algorithm required. ")
+                : (object)new XElement("validation",
+                    new XAttribute("algorithm", ValidationAlgorithm));
+
+            var outerElement = new XElement("descriptor",
+                encryptionElement,
+                validationElement,
+                masterKey.ToMasterKeyElement());
+
+            return new XmlSerializedDescriptorInfo(outerElement, typeof(AuthenticatedEncryptorDescriptorDeserializer));
         }
 
         internal override void Validate()
